@@ -6,6 +6,11 @@ public class _note : MonoBehaviour
 {
     /*
      * 
+    để điều khiển xe chạy trơn chu: lecture 60, 61
+    SaveScript.cs from lecture 28. Speed UI
+    AICar 63,64
+
+
     xe: rigidbody > dynamic 
     Thử chạy xe trên terrain => chạy được => terrain có collider và là static rigidbody
 
