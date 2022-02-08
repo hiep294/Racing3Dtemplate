@@ -10,6 +10,8 @@ public class SaveScript : MonoBehaviour
     public static bool LapChange = false;
     public static float LapTime;
     public static float RaceTime;
+    public static float LastLapTime;
+    public static float BestLapTime;
 
     void Awake()
     {
@@ -21,7 +23,15 @@ public class SaveScript : MonoBehaviour
         if (LapChange)
         {
             LapChange = false;
+            LastLapTime = LapTime;
+            // reset LapTime
             LapTime = 0;
+
+            // calculate BestLap
+            if (LapNumber == 2 || (LapNumber > 2 && LastLapTime < BestLapTime))
+            {
+                BestLapTime = LastLapTime;
+            }
         }
 
         if (LapNumber >= 1)

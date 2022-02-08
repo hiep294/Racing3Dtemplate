@@ -15,6 +15,7 @@ public class UIScript : MonoBehaviour
     public TextMeshProUGUI SpeedText;
     public TextMeshProUGUI GearText; //example: speed (0-90) => gear 1; speed (90-120) gear 2; speed 120-180 is gear 3; speed 180-230 is gear 4
     public TextMeshProUGUI RaceTimeText;
+    public TextMeshProUGUI BestLapTimeText;
 
     CarController playerCarController;
 
@@ -47,5 +48,7 @@ public class UIScript : MonoBehaviour
         var RaceTime = TimeSpan.FromSeconds(SaveScript.RaceTime);
         RaceTimeText.text = $"{RaceTime:mm}:{RaceTime:ss}";
 
+        var BestLapTime = TimeSpan.FromSeconds(SaveScript.BestLapTime);
+        BestLapTimeText.text = $"{BestLapTime:mm}:{BestLapTime:ss}";
     }
 }
