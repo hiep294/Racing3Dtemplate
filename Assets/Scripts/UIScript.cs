@@ -82,7 +82,8 @@ public class UIScript : MonoBehaviour
         if (playerImprovement != 0)
         {
             yield return MakeCheckpointShow(0.5f, 1);
-            yield return MakeCheckpointShow(3, 0);
+            yield return new WaitForSeconds(3);
+            yield return MakeCheckpointShow(1, 0);
         }
     }
 

@@ -6,6 +6,8 @@ public class _note : MonoBehaviour
 {
     /*
      * 
+    + bug: high speed and go to the HardBarrier
+    
     research 
     +wheel collider
     +CarController.cs
