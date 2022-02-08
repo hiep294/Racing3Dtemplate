@@ -4,10 +4,12 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityStandardAssets.Vehicles.Car;
 using TMPro;
+using System;
 
 public class UIScript : MonoBehaviour
 {
     public Image SpeedRing;
+    public TextMeshProUGUI LapTimeText;
     public TextMeshProUGUI LapNumberText;
     public int TotalLaps = 3;
     public TextMeshProUGUI SpeedText;
@@ -35,5 +37,9 @@ public class UIScript : MonoBehaviour
         SpeedText.text = $"{speed:0}";
         GearText.text = $"{playerCarController.GetGearNum() + 1}";
         LapNumberText.text = $"{SaveScript.LapNumber}/{TotalLaps}";
+
+        var LapTime = TimeSpan.FromSeconds(SaveScript.LapTime);
+        //LapTimeText.text = $"{LapTime / 60:00}:{LapTime % 60:00}";
+        LapTimeText.text = $"{LapTime:mm}:{LapTime:ss}";
     }
 }

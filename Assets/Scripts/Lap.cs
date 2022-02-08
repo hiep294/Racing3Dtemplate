@@ -6,10 +6,10 @@ public class Lap : MonoBehaviour
 {
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("asdasd");
         if (other.gameObject.CompareTag("Player"))
         {
             SaveScript.LapNumber++;
+            SaveScript.LapChange = true;
         }
     }
 }
