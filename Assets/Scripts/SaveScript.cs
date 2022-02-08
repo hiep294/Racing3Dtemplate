@@ -9,6 +9,7 @@ public class SaveScript : MonoBehaviour
     public static int LapNumber = 0; // when player go to start point, => LapNumber changes
     public static bool LapChange = false;
     public static float LapTime;
+    public static float RaceTime;
 
     void Awake()
     {
@@ -26,6 +27,7 @@ public class SaveScript : MonoBehaviour
         if (LapNumber >= 1)
         {
             LapTime += Time.deltaTime;
+            RaceTime += Time.deltaTime;
         }
     }
 }

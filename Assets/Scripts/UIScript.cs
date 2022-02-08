@@ -14,6 +14,8 @@ public class UIScript : MonoBehaviour
     public int TotalLaps = 3;
     public TextMeshProUGUI SpeedText;
     public TextMeshProUGUI GearText; //example: speed (0-90) => gear 1; speed (90-120) gear 2; speed 120-180 is gear 3; speed 180-230 is gear 4
+    public TextMeshProUGUI RaceTimeText;
+
     CarController playerCarController;
 
     void Awake()
@@ -41,5 +43,9 @@ public class UIScript : MonoBehaviour
         var LapTime = TimeSpan.FromSeconds(SaveScript.LapTime);
         //LapTimeText.text = $"{LapTime / 60:00}:{LapTime % 60:00}";
         LapTimeText.text = $"{LapTime:mm}:{LapTime:ss}";
+
+        var RaceTime = TimeSpan.FromSeconds(SaveScript.RaceTime);
+        RaceTimeText.text = $"{RaceTime:mm}:{RaceTime:ss}";
+
     }
 }
