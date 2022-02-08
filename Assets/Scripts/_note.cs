@@ -6,6 +6,13 @@ public class _note : MonoBehaviour
 {
     /*
      * 
+    research 
+    +wheel collider
+    +CarController.cs
+    +CarUserControl.cs
+    +CarAudio.cs
+    +CarAIController.cs
+    
     để điều khiển xe chạy trơn chu: lecture 60, 61
     SaveScript.cs from lecture 28. Speed UI
     AICar 63,64
