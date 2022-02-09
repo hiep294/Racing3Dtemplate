@@ -6,9 +6,7 @@ using UnityStandardAssets.Vehicles.Car;
 
 public class WheelCustomController : MonoBehaviour
 {
-    WheelCollider myWheelC;
-    [SerializeField] int indexOfWheel;
-    [SerializeField] CarController carController;
+    WheelCollider myWheelCollider;
     bool isHittingRumble = false;
 
     [System.Serializable]
@@ -30,30 +28,34 @@ public class WheelCustomController : MonoBehaviour
     // Start is called before the first frame update
     private void Awake()
     {
-        myWheelC = GetComponent<WheelCollider>();
-        carController.OnWheelHitChange += OnWheelHitChange;
+        myWheelCollider = GetComponent<WheelCollider>();
         foreach (var stiffness in stiffnesses)
         {
             lookUpStiffnesses[stiffness.tag] = stiffness;
         }
     }
 
-    private void OnWheelHitChange(WheelHit wheelHit, int index)
+    private void FixedUpdate()
     {
-        if (index != indexOfWheel) return;
+        WheelHit wheelHit;
+        myWheelCollider.GetGroundHit(out wheelHit);
+        OnWheelHitChange(wheelHit);
+    }
 
+    private void OnWheelHitChange(WheelHit wheelHit)
+    {
         if (wheelHit.collider != null && lookUpStiffnesses.ContainsKey(wheelHit.collider.tag))
         {
             float forwardStiffness = lookUpStiffnesses[wheelHit.collider.tag].forwardStiffness;
             float sidewayStiffness = lookUpStiffnesses[wheelHit.collider.tag].sidewaysStiffness;
 
-            WheelFrictionCurve fFriction = myWheelC.forwardFriction;
+            WheelFrictionCurve fFriction = myWheelCollider.forwardFriction;
             fFriction.stiffness = forwardStiffness;
-            myWheelC.forwardFriction = fFriction;
+            myWheelCollider.forwardFriction = fFriction;
 
-            WheelFrictionCurve sFriction = myWheelC.sidewaysFriction;
+            WheelFrictionCurve sFriction = myWheelCollider.sidewaysFriction;
             sFriction.stiffness = sidewayStiffness;
-            myWheelC.sidewaysFriction = sFriction;
+            myWheelCollider.sidewaysFriction = sFriction;
         }
 
 

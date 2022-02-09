@@ -56,8 +56,6 @@ namespace UnityStandardAssets.Vehicles.Car
         public float Revs { get; private set; }
         public float AccelInput { get; private set; }
 
-        public Action<WheelHit, int> OnWheelHitChange; //int: index
-
         // Use this for initialization
         private void Start()
         {
@@ -279,11 +277,6 @@ namespace UnityStandardAssets.Vehicles.Car
             {
                 WheelHit wheelHit;
                 m_WheelColliders[i].GetGroundHit(out wheelHit);
-
-                if (OnWheelHitChange != null)
-                {
-                    OnWheelHitChange(wheelHit, i);
-                }
 
                 // is the tire slipping above the given threshhold
                 if (Mathf.Abs(wheelHit.forwardSlip) >= m_SlipLimit || Mathf.Abs(wheelHit.sidewaysSlip) >= m_SlipLimit)
