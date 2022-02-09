@@ -3772,7 +3772,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 769841226}
-  m_LocalRotation: {x: 0.091716416, y: 0.7916854, z: -0.122778475, w: 0.59139484}
+  m_LocalRotation: {x: 0.091716416, y: 0.79168534, z: -0.122778445, w: 0.59139484}
   m_LocalPosition: {x: -154.41705, y: 1.58, z: -154.79861}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -5361,7 +5361,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_LocalRotation: {x: 0.091716416, y: 0.7916854, z: -0.122778475, w: 0.59139484}
+  m_LocalRotation: {x: 0.091716416, y: 0.79168534, z: -0.122778445, w: 0.59139484}
   m_LocalPosition: {x: -154.41705, y: 1.58, z: -154.79861}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
@@ -7533,7 +7533,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stiffnesses:
   - tag: Road
-    forwardStiffness: 2.6
+    forwardStiffness: 2
     sidewaysStiffness: 0.8
   - tag: Terrain
     forwardStiffness: 0.6
@@ -7572,8 +7572,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stiffnesses:
   - tag: Road
-    forwardStiffness: 3
-    sidewaysStiffness: 1.1
+    forwardStiffness: 2.5
+    sidewaysStiffness: 0.9
   - tag: Terrain
     forwardStiffness: 0.6
     sidewaysStiffness: 0.2
@@ -7611,8 +7611,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stiffnesses:
   - tag: Road
-    forwardStiffness: 3
-    sidewaysStiffness: 1.1
+    forwardStiffness: 2.5
+    sidewaysStiffness: 0.9
   - tag: Terrain
     forwardStiffness: 0.6
     sidewaysStiffness: 0.2
@@ -7630,7 +7630,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stiffnesses:
   - tag: Road
-    forwardStiffness: 2.6
+    forwardStiffness: 2
     sidewaysStiffness: 0.8
   - tag: Terrain
     forwardStiffness: 0.6
@@ -8490,7 +8490,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ea65b38d485c374caa584a03f1de571, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_CarDriveType: 1
+  m_CarDriveType: 2
   m_WheelColliders:
   - {fileID: 1184712826}
   - {fileID: 1184712828}
@@ -8507,16 +8507,21 @@ MonoBehaviour:
   - {fileID: 1190034540}
   - {fileID: 1190034546}
   m_CentreOfMassOffset: {x: 0, y: 0, z: 0}
-  m_MaximumSteerAngle: 25
+  m_MaximumSteerAngle: 10
+  accelerationMaximumSteerAngle: 10
+  decelerationMaximumSteerAngle: 15
+  maximumSteerAngleInLowSpeed: 25
   m_SteerHelper: 0.644
+  accelerationSteerHelper: 0.66
+  decelerationSteerHelper: 1
   m_TractionControl: 1
-  m_FullTorqueOverAllWheels: 5500
+  m_FullTorqueOverAllWheels: 2500
   m_ReverseTorque: 500
   m_MaxHandbrakeTorque: 100000000
-  m_Downforce: 100
+  m_Downforce: 200
   m_SpeedType: 0
   m_Topspeed: 223
-  m_RevRangeBoundary: 1
+  m_RevRangeBoundary: 0.3
   m_SlipLimit: 0.8
   m_BrakeTorque: 50000
 --- !u!199 &1198270812
