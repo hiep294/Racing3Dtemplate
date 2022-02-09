@@ -6,9 +6,18 @@ public class _note : MonoBehaviour
 {
     /*
      * 
+    Course: Make a driving game in unity
+
     + bug: high speed and go to the HardBarrier
 
-    has layer: Minimap_Marker => for minimap marker, the camera will not see this layer but minimap camera will
+    base lecture: UserInterface UI > minimap
+    How to create Minimap with marker: 
+    double Road, Road Copied's layer = minimap. 
+    make Road Copied white or any color
+    create CarMarker, its layer = minimap
+    in mainCamera set culling Mask not include minimap
+
+
     
     research 
     +wheel collider

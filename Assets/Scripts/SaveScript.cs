@@ -6,7 +6,7 @@ using UnityStandardAssets.Vehicles.Car;
 
 public class SaveScript : MonoBehaviour
 {
-    CarController playerCarController; //has boxCollider is trigger, but just to setup player to over to lap
+    CarController myCarController; //has boxCollider is trigger, but just to setup player to over to lap
     int lapNumber = 0; // when player go to start point, => LapNumber changes
     bool lapChange = false;
     float lapTime;
@@ -26,7 +26,7 @@ public class SaveScript : MonoBehaviour
 
     void Awake()
     {
-        playerCarController = GameObject.FindGameObjectWithTag("Player").GetComponent<CarController>();
+        myCarController = GetComponent<CarController>();
     }
 
     private void Update()
