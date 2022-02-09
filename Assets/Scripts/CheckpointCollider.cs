@@ -16,10 +16,7 @@ public class CheckpointCollider : MonoBehaviour
     public float CheckImprovement()
     {
         if (lastCheckPointTime == 0) return 0;
-        Debug.Log("lastCheckPointTime " + lastCheckPointTime);
-        Debug.Log("thisCheckPointTime " + thisCheckPointTime);
         float rs = lastCheckPointTime - thisCheckPointTime;
-        Debug.Log("rs " + rs);
         return rs;
     }
 

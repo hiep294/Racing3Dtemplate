@@ -7,6 +7,8 @@ public class _note : MonoBehaviour
     /*
      * 
     + bug: high speed and go to the HardBarrier
+
+    has layer: Minimap_Marker => for minimap marker, the camera will not see this layer but minimap camera will
     
     research 
     +wheel collider
