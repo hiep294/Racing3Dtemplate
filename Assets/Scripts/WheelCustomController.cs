@@ -49,13 +49,19 @@ public class WheelCustomController : MonoBehaviour
             float forwardStiffness = lookUpStiffnesses[wheelHit.collider.tag].forwardStiffness;
             float sidewayStiffness = lookUpStiffnesses[wheelHit.collider.tag].sidewaysStiffness;
 
-            WheelFrictionCurve fFriction = myWheelCollider.forwardFriction;
-            fFriction.stiffness = forwardStiffness;
-            myWheelCollider.forwardFriction = fFriction;
+            if (forwardStiffness != myWheelCollider.forwardFriction.stiffness)
+            {
+                WheelFrictionCurve fFriction = myWheelCollider.forwardFriction;
+                fFriction.stiffness = forwardStiffness;
+                myWheelCollider.forwardFriction = fFriction;
+            }
 
-            WheelFrictionCurve sFriction = myWheelCollider.sidewaysFriction;
-            sFriction.stiffness = sidewayStiffness;
-            myWheelCollider.sidewaysFriction = sFriction;
+            if (sidewayStiffness != myWheelCollider.sidewaysFriction.stiffness)
+            {
+                WheelFrictionCurve sFriction = myWheelCollider.sidewaysFriction;
+                sFriction.stiffness = sidewayStiffness;
+                myWheelCollider.sidewaysFriction = sFriction;
+            }
         }
 
 

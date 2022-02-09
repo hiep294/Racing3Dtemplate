@@ -21,11 +21,9 @@ public class RumbleSound : MonoBehaviour
             if (wheelCustomController.IsHittingRumble)
             {
                 myRumbleSoundPlayer.Play();
-                Debug.Log("Hit rumble");
                 return;
             }
         }
-        Debug.Log("Not Hit rumble");
         myRumbleSoundPlayer.Stop();
     }
 }

@@ -7,6 +7,7 @@ TagManager:
   - Road
   - Terrain
   - RumbleStrip
+  - Barrier
   layers:
   - Default
   - TransparentFX
