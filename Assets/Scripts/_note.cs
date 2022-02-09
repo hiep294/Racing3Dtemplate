@@ -10,6 +10,10 @@ public class _note : MonoBehaviour
 
     + bug: high speed and go to the HardBarrier
 
+    [CORE] to make car drive better
+    + Car Drive Type: Rear Wheel Drive, also make full torgue better => avoid lagging between 4 wheels
+    + Stiffness of front wheels higher than stiffness of front wheels
+
     base lecture: UserInterface UI > minimap
     How to create Minimap with marker: 
     double Road, Road Copied's layer = minimap. 

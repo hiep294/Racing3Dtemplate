@@ -7533,8 +7533,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stiffnesses:
   - tag: Road
-    forwardStiffness: 1
-    sidewaysStiffness: 1
+    forwardStiffness: 2.6
+    sidewaysStiffness: 0.8
   - tag: Terrain
     forwardStiffness: 0.6
     sidewaysStiffness: 0.2
@@ -7572,8 +7572,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stiffnesses:
   - tag: Road
-    forwardStiffness: 1
-    sidewaysStiffness: 1
+    forwardStiffness: 3
+    sidewaysStiffness: 1.1
   - tag: Terrain
     forwardStiffness: 0.6
     sidewaysStiffness: 0.2
@@ -7611,8 +7611,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stiffnesses:
   - tag: Road
-    forwardStiffness: 1
-    sidewaysStiffness: 1
+    forwardStiffness: 3
+    sidewaysStiffness: 1.1
   - tag: Terrain
     forwardStiffness: 0.6
     sidewaysStiffness: 0.2
@@ -7630,8 +7630,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stiffnesses:
   - tag: Road
-    forwardStiffness: 1
-    sidewaysStiffness: 1
+    forwardStiffness: 2.6
+    sidewaysStiffness: 0.8
   - tag: Terrain
     forwardStiffness: 0.6
     sidewaysStiffness: 0.2
@@ -8490,7 +8490,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ea65b38d485c374caa584a03f1de571, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_CarDriveType: 2
+  m_CarDriveType: 1
   m_WheelColliders:
   - {fileID: 1184712826}
   - {fileID: 1184712828}
@@ -8510,7 +8510,7 @@ MonoBehaviour:
   m_MaximumSteerAngle: 25
   m_SteerHelper: 0.644
   m_TractionControl: 1
-  m_FullTorqueOverAllWheels: 2500
+  m_FullTorqueOverAllWheels: 5500
   m_ReverseTorque: 500
   m_MaxHandbrakeTorque: 100000000
   m_Downforce: 100
