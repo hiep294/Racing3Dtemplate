@@ -25,12 +25,7 @@ namespace UnityStandardAssets.Vehicles.Car
         [SerializeField] private WheelEffects[] m_WheelEffects = new WheelEffects[4];
         [SerializeField] private Vector3 m_CentreOfMassOffset;
         [SerializeField] private float m_MaximumSteerAngle;
-        [SerializeField] private float accelerationMaximumSteerAngle = 10;
-        [SerializeField] private float decelerationMaximumSteerAngle = 15;
-        [SerializeField] private float maximumSteerAngleInLowSpeed = 25;
         [Range(0, 1)] [SerializeField] private float m_SteerHelper; // 0 is raw physics , 1 the car will grip in the direction it is facing
-        [Range(0, 1)] [SerializeField] float accelerationSteerHelper = 0.66f;
-        [Range(0, 1)] [SerializeField] float decelerationSteerHelper = 1f;
         [Range(0, 1)] [SerializeField] private float m_TractionControl; // 0 is no traction control, 1 is full interference
         [SerializeField] private float m_FullTorqueOverAllWheels;
         [SerializeField] private float m_ReverseTorque;
@@ -60,13 +55,8 @@ namespace UnityStandardAssets.Vehicles.Car
         public float MaxSpeed { get { return m_Topspeed; } }
         public float Revs { get; private set; }
         public float AccelInput { get; private set; }
-        public float AccelerationSteerHelper { get => accelerationSteerHelper; }
-        public float DecelerationSteerHelper { get => decelerationSteerHelper; }
         public float M_SteerHelper { get => m_SteerHelper; set => m_SteerHelper = value; }
-        public float AccelerationMaximumSteerAngle { get => accelerationMaximumSteerAngle; }
-        public float DecelerationMaximumSteerAngle { get => decelerationMaximumSteerAngle; }
         public float M_MaximumSteerAngle { get => m_MaximumSteerAngle; set => m_MaximumSteerAngle = value; }
-        public float MaximumSteerAngleInLowSpeed { get => maximumSteerAngleInLowSpeed; }
 
         // Use this for initialization
         private void Start()
@@ -160,8 +150,7 @@ namespace UnityStandardAssets.Vehicles.Car
             //Set the steer on the front wheels.
             //Assuming that wheels 0 and 1 are the front wheels.
             m_SteerAngle = steering * M_MaximumSteerAngle;
-            m_WheelColliders[0].steerAngle = m_SteerAngle;
-            m_WheelColliders[1].steerAngle = m_SteerAngle;
+            ApplySteering(steering, m_SteerAngle);
 
             SteerHelper();
             ApplyDrive(accel, footbrake);
@@ -185,6 +174,31 @@ namespace UnityStandardAssets.Vehicles.Car
             TractionControl();
         }
 
+
+        public void ApplySteering(float steerInput, float angle)
+        {
+            //Set the steer on the front wheels.
+            //Assuming that wheels 0 and 1 are the front wheels.
+            //	Ackerman steering formula.
+            var wheelFL = m_WheelColliders[1];
+            var wheelFR = m_WheelColliders[0];
+            if (steerInput > 0f)
+            {
+                wheelFL.steerAngle = (Mathf.Deg2Rad * Mathf.Abs(angle) * 2.55f) * (Mathf.Rad2Deg * Mathf.Atan(2.55f / (6 + (1.5f / 2))) * steerInput);
+                wheelFR.steerAngle = (Mathf.Deg2Rad * Mathf.Abs(angle) * 2.55f) * (Mathf.Rad2Deg * Mathf.Atan(2.55f / (6 - (1.5f / 2))) * steerInput);
+            }
+            else if (steerInput < 0f)
+            {
+
+                wheelFL.steerAngle = (Mathf.Deg2Rad * Mathf.Abs(angle) * 2.55f) * (Mathf.Rad2Deg * Mathf.Atan(2.55f / (6 - (1.5f / 2))) * steerInput);
+                wheelFR.steerAngle = (Mathf.Deg2Rad * Mathf.Abs(angle) * 2.55f) * (Mathf.Rad2Deg * Mathf.Atan(2.55f / (6 + (1.5f / 2))) * steerInput);
+            }
+            else
+            {
+                wheelFL.steerAngle = 0f;
+                wheelFR.steerAngle = 0f;
+            }
+        }
 
         private void CapSpeed()
         {
@@ -247,7 +261,7 @@ namespace UnityStandardAssets.Vehicles.Car
             }
         }
 
-
+        // to config velocity with steerhelper
         private void SteerHelper()
         {
             for (int i = 0; i < 4; i++)
