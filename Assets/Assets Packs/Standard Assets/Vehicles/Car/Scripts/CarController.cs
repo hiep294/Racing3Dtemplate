@@ -38,6 +38,13 @@ namespace UnityStandardAssets.Vehicles.Car
         [SerializeField] private float m_SlipLimit;
         [SerializeField] private float m_BrakeTorque;
 
+        // CalculateCarInfo
+        // https://youtu.be/ZwMa9g7lvT8?t=87
+        // https://www.xarg.org/book/kinematics/ackerman-steering/
+        float m_WheelBase; //(meters) distance between front wheel and rear wheel
+        float m_FrontTrack;//(meters) between two Fronts
+        float m_TurnRadius; //(meters)
+
         private Quaternion[] m_WheelMeshLocalRotations;
         private Vector3 m_Prevpos, m_Pos;
         private float m_SteerAngle;
@@ -57,10 +64,14 @@ namespace UnityStandardAssets.Vehicles.Car
         public float AccelInput { get; private set; }
         public float M_SteerHelper { get => m_SteerHelper; set => m_SteerHelper = value; }
         public float M_MaximumSteerAngle { get => m_MaximumSteerAngle; set => m_MaximumSteerAngle = value; }
+        public float WheelBase { get => m_WheelBase; set => m_WheelBase = value; }
+        public float FrontTrack { get => m_FrontTrack; set => m_FrontTrack = value; }
+        public float TurnRadius { get => m_TurnRadius; set => m_TurnRadius = value; }
 
         // Use this for initialization
         private void Start()
         {
+            CalculateCarInfo();
             m_WheelMeshLocalRotations = new Quaternion[4];
             for (int i = 0; i < 4; i++)
             {
@@ -72,6 +83,21 @@ namespace UnityStandardAssets.Vehicles.Car
 
             m_Rigidbody = GetComponent<Rigidbody>();
             m_CurrentTorque = m_FullTorqueOverAllWheels - (m_TractionControl * m_FullTorqueOverAllWheels);
+        }
+
+        private void CalculateCarInfo()
+        {
+            Vector3 positionOfWheelFL = m_WheelColliders[1].transform.position;
+            Vector3 positionOfWheelFR = m_WheelColliders[0].transform.position;
+            Vector3 positionOfWheelRL = m_WheelColliders[2].transform.position;
+            Vector3 positionOfWheelRR = m_WheelColliders[3].transform.position;
+
+            FrontTrack = Vector3.Distance(positionOfWheelFL, positionOfWheelFR);
+            Vector3 middleFrontWheels = (positionOfWheelFL + positionOfWheelFR) / 2;
+            Vector3 middleRearWheels = (positionOfWheelRL + positionOfWheelRR) / 2;
+            WheelBase = Vector3.Distance(middleFrontWheels, middleRearWheels);
+
+            print($"WheelBase {WheelBase}; FrontTrack {FrontTrack}");
         }
 
         public int GetGearNum() { return m_GearNum; }
@@ -143,14 +169,15 @@ namespace UnityStandardAssets.Vehicles.Car
 
             //clamp input values
             steering = Mathf.Clamp(steering, -1, 1);
+
             AccelInput = accel = Mathf.Clamp(accel, 0, 1);
-            BrakeInput = footbrake = -1 * Mathf.Clamp(footbrake, -1, 0);
+            BrakeInput = footbrake = -1 * Mathf.Clamp(footbrake, -1, 0); // reverse footbrake
             handbrake = Mathf.Clamp(handbrake, 0, 1);
 
             //Set the steer on the front wheels.
             //Assuming that wheels 0 and 1 are the front wheels.
             m_SteerAngle = steering * M_MaximumSteerAngle;
-            ApplySteering(steering, m_SteerAngle);
+            ApplySteering(m_SteerAngle);
 
             SteerHelper();
             ApplyDrive(accel, footbrake);
@@ -175,23 +202,28 @@ namespace UnityStandardAssets.Vehicles.Car
         }
 
 
-        public void ApplySteering(float steerInput, float angle)
+        // angle: degree
+        public void ApplySteering(float angle)
         {
             //Set the steer on the front wheels.
             //Assuming that wheels 0 and 1 are the front wheels.
             //	Ackerman steering formula.
             var wheelFL = m_WheelColliders[1];
             var wheelFR = m_WheelColliders[0];
-            if (steerInput > 0f)
+
+            TurnRadius = (float)WheelBase / Mathf.Tan(Mathf.Deg2Rad * angle);
+
+
+            if (angle > 0f) // turn right
             {
-                wheelFL.steerAngle = (Mathf.Deg2Rad * Mathf.Abs(angle) * 2.55f) * (Mathf.Rad2Deg * Mathf.Atan(2.55f / (6 + (1.5f / 2))) * steerInput);
-                wheelFR.steerAngle = (Mathf.Deg2Rad * Mathf.Abs(angle) * 2.55f) * (Mathf.Rad2Deg * Mathf.Atan(2.55f / (6 - (1.5f / 2))) * steerInput);
+                wheelFL.steerAngle = Mathf.Atan(WheelBase / (TurnRadius + FrontTrack / 2)) * Mathf.Rad2Deg;
+                wheelFR.steerAngle = Mathf.Atan(WheelBase / (TurnRadius - FrontTrack / 2)) * Mathf.Rad2Deg;
             }
-            else if (steerInput < 0f)
+            else if (angle < 0f) // turn left
             {
 
-                wheelFL.steerAngle = (Mathf.Deg2Rad * Mathf.Abs(angle) * 2.55f) * (Mathf.Rad2Deg * Mathf.Atan(2.55f / (6 - (1.5f / 2))) * steerInput);
-                wheelFR.steerAngle = (Mathf.Deg2Rad * Mathf.Abs(angle) * 2.55f) * (Mathf.Rad2Deg * Mathf.Atan(2.55f / (6 + (1.5f / 2))) * steerInput);
+                wheelFL.steerAngle = Mathf.Atan(WheelBase / (TurnRadius - FrontTrack / 2)) * Mathf.Rad2Deg;
+                wheelFR.steerAngle = Mathf.Atan(WheelBase / (TurnRadius + FrontTrack / 2)) * Mathf.Rad2Deg;
             }
             else
             {
@@ -223,7 +255,7 @@ namespace UnityStandardAssets.Vehicles.Car
 
         private void ApplyDrive(float accel, float footbrake)
         {
-
+            // footbrake = accel in params of Move(), but it has been reversed in Move();
             float thrustTorque;
             switch (m_CarDriveType)
             {
@@ -251,12 +283,15 @@ namespace UnityStandardAssets.Vehicles.Car
             {
                 if (CurrentSpeed > 5 && Vector3.Angle(transform.forward, m_Rigidbody.velocity) < 50f)
                 {
+                    // handle brake, when press down arrow.
                     m_WheelColliders[i].brakeTorque = m_BrakeTorque * footbrake;
+                    // tested : if (i == 1) { print(m_WheelColliders[i].brakeTorque); }
                 }
-                else if (footbrake > 0)
+                else if (footbrake > 0) // go back
                 {
                     m_WheelColliders[i].brakeTorque = 0f;
                     m_WheelColliders[i].motorTorque = -m_ReverseTorque * footbrake;
+                    // tested if (i == 1) { print(m_WheelColliders[i].motorTorque); }
                 }
             }
         }
