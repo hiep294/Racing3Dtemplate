@@ -38,13 +38,6 @@ namespace UnityStandardAssets.Vehicles.Car
         [SerializeField] private float m_SlipLimit;
         [SerializeField] private float m_BrakeTorque;
 
-        // CalculateCarInfo
-        // https://youtu.be/ZwMa9g7lvT8?t=87
-        // https://www.xarg.org/book/kinematics/ackerman-steering/
-        float m_WheelBase; //(meters) distance between front wheel and rear wheel
-        float m_FrontTrack;//(meters) between two Fronts
-        float m_TurnRadius; //(meters)
-
         private Quaternion[] m_WheelMeshLocalRotations;
         private Vector3 m_Prevpos, m_Pos;
         private float m_SteerAngle;
@@ -54,6 +47,13 @@ namespace UnityStandardAssets.Vehicles.Car
         private float m_CurrentTorque;
         private Rigidbody m_Rigidbody;
         private const float k_ReversingThreshold = 0.01f;
+
+        // CalculateCarInfo
+        // https://youtu.be/ZwMa9g7lvT8?t=87
+        // https://www.xarg.org/book/kinematics/ackerman-steering/
+        float m_WheelBase; //(meters) distance between front wheel and rear wheel
+        float m_FrontTrack;//(meters) between two Fronts
+        float m_TurnRadius; //(meters)
 
         public bool Skidding { get; private set; }
         public float BrakeInput { get; private set; }
@@ -96,8 +96,6 @@ namespace UnityStandardAssets.Vehicles.Car
             Vector3 middleFrontWheels = (positionOfWheelFL + positionOfWheelFR) / 2;
             Vector3 middleRearWheels = (positionOfWheelRL + positionOfWheelRR) / 2;
             WheelBase = Vector3.Distance(middleFrontWheels, middleRearWheels);
-
-            print($"WheelBase {WheelBase}; FrontTrack {FrontTrack}");
         }
 
         public int GetGearNum() { return m_GearNum; }
@@ -155,7 +153,7 @@ namespace UnityStandardAssets.Vehicles.Car
             Revs = ULerp(revsRangeMin, revsRangeMax, m_GearFactor);
         }
 
-
+        // called by fixUpdate
         public void Move(float steering, float accel, float footbrake, float handbrake)
         {
             for (int i = 0; i < 4; i++)
@@ -166,6 +164,7 @@ namespace UnityStandardAssets.Vehicles.Car
                 m_WheelMeshes[i].transform.position = position;
                 m_WheelMeshes[i].transform.rotation = quat;
             }
+
 
             //clamp input values
             steering = Mathf.Clamp(steering, -1, 1);
