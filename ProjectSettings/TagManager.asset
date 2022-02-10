@@ -11,6 +11,7 @@ TagManager:
   - Fire
   - ProgressChecker
   - ProgressCheckerAI
+  - Enemy
   layers:
   - Default
   - TransparentFX
