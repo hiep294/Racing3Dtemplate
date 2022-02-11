@@ -25,6 +25,7 @@ namespace UnityStandardAssets.Vehicles.Car
         [SerializeField] private WheelEffects[] m_WheelEffects = new WheelEffects[4];
         [SerializeField] private Vector3 m_CentreOfMassOffset;
         [SerializeField] private float m_MaximumSteerAngle;
+
         [Range(0, 1)] [SerializeField] private float m_SteerHelper; // 0 is raw physics , 1 the car will grip in the direction it is facing
         [Range(0, 1)] [SerializeField] private float m_TractionControl; // 0 is no traction control, 1 is full interference
         [SerializeField] private float m_FullTorqueOverAllWheels;
@@ -37,6 +38,11 @@ namespace UnityStandardAssets.Vehicles.Car
         [SerializeField] private float m_RevRangeBoundary = 1f;
         [SerializeField] private float m_SlipLimit;
         [SerializeField] private float m_BrakeTorque;
+        [Header("For only Player")]
+        [Tooltip("Apply this value when Car Speed is 0 or more")] [SerializeField] private float m_MaximumSteerAngleAt0 = 45;
+        [Tooltip("Apply this value when Car Speed is larger than 10")] [SerializeField] private float m_MaximumSteerAngleAt10 = 25;
+        [Tooltip("Apply this value when Car Speed is larger than 70")] [SerializeField] private float m_MaximumSteerAngleAt70 = 15;
+        [Tooltip("Apply this value when Car Speed is larger than 110")] [SerializeField] private float m_MaximumSteerAngleAt110 = 10;
 
         private Quaternion[] m_WheelMeshLocalRotations;
         private Vector3 m_Prevpos, m_Pos;
@@ -165,13 +171,21 @@ namespace UnityStandardAssets.Vehicles.Car
                 m_WheelMeshes[i].transform.rotation = quat;
             }
 
-
             //clamp input values
             steering = Mathf.Clamp(steering, -1, 1);
 
             AccelInput = accel = Mathf.Clamp(accel, 0, 1);
             BrakeInput = footbrake = -1 * Mathf.Clamp(footbrake, -1, 0); // reverse footbrake
             handbrake = Mathf.Clamp(handbrake, 0, 1);
+
+            // setting steer based on speed
+            if (gameObject.CompareTag("Player"))
+            {
+                M_MaximumSteerAngle = m_MaximumSteerAngleAt0;
+                if (CurrentSpeed > 10) M_MaximumSteerAngle = m_MaximumSteerAngleAt10;
+                if (CurrentSpeed > 70) M_MaximumSteerAngle = m_MaximumSteerAngleAt70;
+                if (CurrentSpeed > 110) M_MaximumSteerAngle = m_MaximumSteerAngleAt110;
+            }
 
             //Set the steer on the front wheels.
             //Assuming that wheels 0 and 1 are the front wheels.
