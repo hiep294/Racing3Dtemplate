@@ -7,6 +7,7 @@ public class _note : MonoBehaviour
     /*
      * 
     Course: Make a driving game in unity
+    + Car Audio: should create audio Source => to make 3D audio
 
     + bug: high speed and go to the HardBarrier
 
