@@ -35,11 +35,11 @@ public class CarControl : MonoBehaviour
     void Update()
     {
         // Call the ProcessTracker method to move the tracker
-        UpdateTrackerTransform();
+        UpdateTrackerMovement();
 
         UpdateCurrentSpeed();
 
-        UpdateTransform();
+        UpdateMovement();
     }
 
     void StartTracker()
@@ -56,7 +56,7 @@ public class CarControl : MonoBehaviour
     }
 
     // this will not use desiredSpeed
-    void UpdateTrackerTransform()
+    void UpdateTrackerMovement()
     {
         float distanceTravelledOfTracker = distanceTravelled + lookAhead;
         myTracker.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(distanceTravelledOfTracker), (thePathCreator.path.GetRotationAtDistance(distanceTravelledOfTracker)));
@@ -91,7 +91,7 @@ public class CarControl : MonoBehaviour
         currentSpeed = upComingCurrentSpeed;
     }
 
-    void UpdateTransform()
+    void UpdateMovement()
     {
         distanceTravelled += currentSpeed * Time.deltaTime;
         transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(distanceTravelled), (thePathCreator.path.GetRotationAtDistance(distanceTravelled)));
