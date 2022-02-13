@@ -186,7 +186,8 @@ namespace UnityStandardAssets.Vehicles.Car
             if (col.rigidbody != null)
             {
                 var otherAI = col.rigidbody.GetComponent<CarAIControl>();
-                if (otherAI != null)
+                var playerCar = col.rigidbody.GetComponent<CarController>();
+                if (otherAI != null || playerCar != null)
                 {
                     // we'll take evasive action for 1 second
                     m_AvoidOtherCarTime = Time.time + 1;
