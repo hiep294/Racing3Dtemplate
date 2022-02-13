@@ -12,6 +12,7 @@ TagManager:
   - ProgressChecker
   - ProgressCheckerAI
   - Enemy
+  - Trackers
   layers:
   - Default
   - TransparentFX
