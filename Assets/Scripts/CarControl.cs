@@ -12,7 +12,7 @@ public class CarControl : MonoBehaviour
     [Tooltip("Time when car get from 0 to maxSpeed")] [SerializeField] [Min(0)] float timeToGetMaxSpeed = 5f; //note*: time from maxSpeed to 0: will be handle by the brake, at cornors 
 
     [Header("Handle brake")]
-    [SerializeField] [Range(0, 1)] float cautiousSpeedFactor = 0.2f;               // percentage of max speed to use when being maximally cautious
+    [SerializeField] [Range(0, 1)] float cautiousSpeedFactor = 0f;               // percentage of max speed to use when being maximally cautious
     [SerializeField] [Range(0, 180)] float cautiousMaxAngle = 180f;                  // angle of approaching corner to treat as warranting maximum caution
     [Tooltip("Time when car get from maxSpeed to 0")] [SerializeField] [Min(0)] float timeToBrakeCompletely = 2f; //note*: time from maxSpeed to 0: will be handle by the brake, at cornors 
 
