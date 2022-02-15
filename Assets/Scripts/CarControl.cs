@@ -61,9 +61,11 @@ public class CarControl : MonoBehaviour
     [SerializeField] float duration = 3f;
 
     float currentSpeed = 0;
+    float desiredSpeed = 0;
     float maxSpeed;
     float maxSpeedTime;
     float brakeCompletelyTime;
+    float approachingCornerAngle;
 
     public float MaxSpeed { get => maxSpeed; set => maxSpeed = value; }
     public float MaxSpeedTime { get => maxSpeedTime; set => maxSpeedTime = value; }
@@ -109,11 +111,12 @@ public class CarControl : MonoBehaviour
         UpdateNitroManament();
 
         UpdateNearTrackerMovement();
-        UpdateFarTrackerMovement();
 
         UpdateCurrentSpeed();
 
         UpdateMovement();
+        UpdateFarTrackerMovement();
+
     }
 
     #region NITRO
@@ -158,18 +161,24 @@ public class CarControl : MonoBehaviour
         farTracker.aHeadDistance = Mathf.Max(minLookAhead, distanceForCarToStop);
 
         // stop farTracker in need, to avoid it is too far from the car
-        if (farTracker.distanceTravelled - distanceTravelled > farTracker.aHeadDistance)
+        if (farTracker.distanceTravelled - distanceTravelled >= farTracker.aHeadDistance)
         {
             return;
         }
 
         // moving farTracker
-        float farTrackerSpeed = currentSpeed + 15f;
-        if (farTracker.distanceTravelled - distanceTravelled > farTracker.aHeadDistance - minLookAhead)
+        float farTrackerSpeed = desiredSpeed;
+        if (Mathf.Approximately(desiredSpeed, currentSpeed))
         {
-            farTrackerSpeed = currentSpeed + 5f;
+            farTrackerSpeed = currentSpeed * 2 + 50; // to ensure tracker will go faster;
         }
+
         farTracker.distanceTravelled += farTrackerSpeed * Time.deltaTime;
+
+        if (farTracker.distanceTravelled - distanceTravelled > farTracker.aHeadDistance)
+        {
+            farTracker.distanceTravelled = farTracker.aHeadDistance + distanceTravelled;
+        }
 
         farTracker.theGameObject.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(farTracker.distanceTravelled), thePathCreator.path.GetRotationAtDistance(farTracker.distanceTravelled));
     }
@@ -187,22 +196,22 @@ public class CarControl : MonoBehaviour
         farTracker.approachingCornerAngleForCar = Vector3.Angle(farTracker.theGameObject.transform.forward, transform.forward);
         nearTracker.approachingCornerAngleForCar = Vector3.Angle(nearTracker.theGameObject.transform.forward, transform.forward);
 
-        float approachingCornerAngle = Mathf.Max(farTracker.approachingCornerAngleForCar, nearTracker.approachingCornerAngleForCar);
+        approachingCornerAngle = Mathf.Max(farTracker.approachingCornerAngleForCar, nearTracker.approachingCornerAngleForCar);
         approachingCornerAngle = Mathf.Min(approachingCornerAngle, cautiousMaxAngle);
         // if it's different to our current angle, we need to be cautious (i.e. slow down) a certain amount
-        float desiredSpeed = Mathf.Cos(Mathf.Deg2Rad * approachingCornerAngle) * MaxSpeed;
-        desiredSpeed = Mathf.Max(desiredSpeed, minSpeedAtAnyCorner);
+        desiredSpeed = Mathf.Cos(Mathf.Deg2Rad * approachingCornerAngle) * MaxSpeed;
+        float desiredSpeedApplied = Mathf.Max(desiredSpeed, minSpeedAtAnyCorner);
 
         float upComingCurrentSpeed = currentSpeed;
-        if (desiredSpeed > currentSpeed)
+        if (desiredSpeedApplied > currentSpeed)
         { // accel
             upComingCurrentSpeed += Time.deltaTime * MaxSpeed / MaxSpeedTime;
-            upComingCurrentSpeed = Mathf.Min(upComingCurrentSpeed, desiredSpeed);
+            upComingCurrentSpeed = Mathf.Min(upComingCurrentSpeed, desiredSpeedApplied);
         }
-        else if (desiredSpeed < currentSpeed)
+        else if (desiredSpeedApplied < currentSpeed)
         { // bake
             upComingCurrentSpeed -= Time.deltaTime * MaxSpeed / BrakeCompletelyTime;
-            upComingCurrentSpeed = Mathf.Max(upComingCurrentSpeed, desiredSpeed);
+            upComingCurrentSpeed = Mathf.Max(upComingCurrentSpeed, desiredSpeedApplied);
         }
         currentSpeed = upComingCurrentSpeed;
     }

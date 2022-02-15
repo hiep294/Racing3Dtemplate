@@ -6,6 +6,12 @@ public class _note : MonoBehaviour
 {
     /*
      * 
+    + Limit speed in road
+
+    + research wheelCollider without using library => to limit high speed
+    + Thing about elements which can limit car speed
+    + thinking a bit about large number
+    + fix speed of far Tracker
     + implement nitro effect without duration
 
     + clear affects of nitro
