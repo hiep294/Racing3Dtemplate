@@ -10,12 +10,15 @@ public class CarControl : MonoBehaviour
     [Header("Basic information")]
     [SerializeField] PathCreator thePathCreator;
     [SerializeField] float baseMaxSpeed = 200;
+    [Tooltip("MaxSpeed could be changed by Nitro")] [SerializeField] float minOfMaxSpeed = 50f;
     [Tooltip("Min between this and its farTracker")] [SerializeField] float minLookAhead = 5f;
     [Tooltip("Time from 0 to maxSpeed")] [SerializeField] [Min(0)] float baseMaxAccelTime = 5f;
+    [Tooltip("MaxAccelTime could be changed by Nitro")] [SerializeField] float minOfMaxAccelTime = 0.5f;
+
     float currentSpeed = 0;
     float desiredSpeed = 0;
     float maxSpeed;
-    float maxAccelTime;
+    float maxAccelTime;  // time from 0 to MaxSpeed, will be consider as max time of accel
 
 
 
@@ -30,6 +33,7 @@ public class CarControl : MonoBehaviour
     [Tooltip("Time when car get from maxSpeed to 0")]
     [SerializeField]
     [Min(0)] float baseMaxBrakeTime = 1f;
+    [Tooltip("MaxBrakeTime could be changed by Nitro")] [SerializeField] float minOfMaxBrakeTime = 0.5f;
 
     public enum TrackerType
     {
@@ -55,7 +59,7 @@ public class CarControl : MonoBehaviour
     GameObject trackersContainer;
     Dictionary<TrackerType, Tracker> myTrackers;
     [SerializeField] float stepToCheckCornerAngle = 5f; // farTracker's aHeadDistance will devide it into parts by this step; => to find maxApproachingCornerAngle
-    float brakeCompletelyTime;
+    float maxBrakeTime; // time from MaxSpeed to 0, will be consider as max time of brake
     float approachingCornerAngle;
 
 
@@ -66,10 +70,13 @@ public class CarControl : MonoBehaviour
     [Header("NITRO")]
     [SerializeField] float maxSpeedAdditiveModifier = 100f;
     [SerializeField] [Range(-100, 100)] float maxSpeedPercentageModifier = 100f;
+
     [SerializeField] float maxAccelTimeAdditiveModifier = -1f;
     [SerializeField] [Range(-100, 100)] float maxAccelTimePercentageModifier = -10f;
+
     [SerializeField] float maxBrakeTimeAdditiveModifier = 0.5f; // please set it similar to baseBrakeCompletelyTime or less time
     [SerializeField] [Range(-100, 100)] float maxBrakeTimePercentageModifier = -10f; // please set it similar to baseBrakeCompletelyTime or less time
+
     [SerializeField] string inputNitro = "Jump"; // press Space to run nitro
     [SerializeField] float nitroDuration = 3f;
     [SerializeField] int numberOfTimesUsingNitro = 2;
@@ -81,7 +88,7 @@ public class CarControl : MonoBehaviour
 
     public float MaxSpeed { get => maxSpeed; set => maxSpeed = value; }
     public float MaxAccelTime { get => maxAccelTime; set => maxAccelTime = value; }
-    public float MaxBrakeTime { get => brakeCompletelyTime; set => brakeCompletelyTime = value; }
+    public float MaxBrakeTime { get => maxBrakeTime; set => maxBrakeTime = value; }
 
     void Awake()
     {
@@ -164,9 +171,9 @@ public class CarControl : MonoBehaviour
     {
         numberOfTimesUsingNitro--;
         nitroRemainingTime = nitroDuration;
-        MaxSpeed = Mathf.Max(GetValueModifier(baseMaxSpeed, maxSpeedAdditiveModifier, maxSpeedPercentageModifier), 0);
-        MaxAccelTime = Mathf.Max(GetValueModifier(MaxAccelTime, maxAccelTimeAdditiveModifier, maxAccelTimePercentageModifier), 0);
-        MaxBrakeTime = Mathf.Max(0, GetValueModifier(MaxBrakeTime, maxBrakeTimeAdditiveModifier, maxBrakeTimePercentageModifier));
+        MaxSpeed = Mathf.Max(minOfMaxSpeed, GetValueModifier(baseMaxSpeed, maxSpeedAdditiveModifier, maxSpeedPercentageModifier));
+        MaxAccelTime = Mathf.Max(minOfMaxAccelTime, GetValueModifier(MaxAccelTime, maxAccelTimeAdditiveModifier, maxAccelTimePercentageModifier));
+        MaxBrakeTime = Mathf.Max(minOfMaxBrakeTime, GetValueModifier(MaxBrakeTime, maxBrakeTimeAdditiveModifier, maxBrakeTimePercentageModifier));
     }
     void TurnOffNitro()
     {
@@ -176,7 +183,7 @@ public class CarControl : MonoBehaviour
     }
     void CleanNitro()
     {
-        float maxSpeedNitro = Mathf.Max(GetValueModifier(baseMaxSpeed, maxSpeedAdditiveModifier, maxSpeedPercentageModifier), 0);
+        float maxSpeedNitro = Mathf.Max(minOfMaxSpeed, GetValueModifier(baseMaxSpeed, maxSpeedAdditiveModifier, maxSpeedPercentageModifier));
         MaxSpeed += (baseMaxSpeed - maxSpeedNitro) * Time.deltaTime / cleaningNitroDuration;
         if (MaxSpeed < baseMaxSpeed) { MaxSpeed = baseMaxSpeed; }
     }
