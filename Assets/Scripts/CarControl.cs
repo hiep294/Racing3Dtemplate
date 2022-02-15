@@ -3,27 +3,30 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityStandardAssets.CrossPlatformInput;
 
 public class CarControl : MonoBehaviour
 {
+    [Header("Basic information")]
     [SerializeField] PathCreator thePathCreator;
-    [SerializeField] float maxSpeed = 100;
+    [SerializeField] float baseMaxSpeed = 100;
     [Tooltip("Min between this and its farTracker")] [SerializeField] float minLookAhead = 5f;
-    [Tooltip("Time when car get from 0 to maxSpeed")] [SerializeField] [Min(0)] float timeToGetMaxSpeed = 5f; //note*: time from maxSpeed to 0: will be handle by the brake, at cornors 
+    [Tooltip("Time from 0 to maxSpeed")] [SerializeField] [Min(0)] float baseMaxSpeedTime = 5f; //note*: time from maxSpeed to 0: will be handle by the brake, at cornors 
 
+
+    //HANDLE BRAKE
     [Header("Handle brake")]
     [SerializeField] float minSpeedAtAnyCorner = 10f;
     readonly float cautiousMaxAngle = 90f;                  // angle of approaching corner to treat as warranting maximum caution
 
     [Tooltip("Time when car get from maxSpeed to 0")]
     [SerializeField]
-    [Min(0)] float timeToBrakeCompletely = 1f; //note*: time from maxSpeed to 0: will be handle by the brake, at cornors 
+    [Min(0)] float baseBrakeCompletelyTime = 1f;
 
     public enum TrackerType
     {
         Near, Far
     }
-    [System.Serializable]
     public class Tracker
     {
         public float distanceTravelled;
@@ -43,10 +46,28 @@ public class CarControl : MonoBehaviour
     float distanceTravelled;
     GameObject trackersContainer;
     Dictionary<TrackerType, Tracker> myTrackers;
-    //GameObject myFarTracker; // to check whether to brake or not
-    //GameObject myCloseTracker; // to check whether to brake or not
+
+
+
+    //NITRO
+    [Header("NITRO")]
+    [SerializeField] float maxSpeedAdditiveModifier = 50f;
+    [SerializeField] [Range(-100, 100)] float maxSpeedPercentageModifier = 10f;
+    [SerializeField] float maxSpeedTimeAdditiveModifier = -1f;
+    [SerializeField] [Range(-100, 100)] float maxSpeedTimePercentageModifier = -50f;
+    [SerializeField] float brakeCompletelyTimeAdditiveModifier = 1f;
+    [SerializeField] [Range(-100, 100)] float brakeCompletelyTimePercentageModifier = 20f;
+    [SerializeField] string inputNitro = "Jump";
+    [SerializeField] float duration = 3f;
 
     float currentSpeed = 0;
+    float maxSpeed;
+    float maxSpeedTime;
+    float brakeCompletelyTime;
+
+    public float MaxSpeed { get => maxSpeed; set => maxSpeed = value; }
+    public float MaxSpeedTime { get => maxSpeedTime; set => maxSpeedTime = value; }
+    public float BrakeCompletelyTime { get => brakeCompletelyTime; set => brakeCompletelyTime = value; }
 
     void Awake()
     {
@@ -56,6 +77,9 @@ public class CarControl : MonoBehaviour
     void Start()
     {
         StartTrackers();
+        MaxSpeed = baseMaxSpeed;
+        MaxSpeedTime = baseMaxSpeedTime;
+        BrakeCompletelyTime = baseBrakeCompletelyTime;
     }
 
     void StartTrackers()
@@ -82,6 +106,8 @@ public class CarControl : MonoBehaviour
 
     void Update()
     {
+        UpdateNitroManament();
+
         UpdateNearTrackerMovement();
         UpdateFarTrackerMovement();
 
@@ -90,6 +116,29 @@ public class CarControl : MonoBehaviour
         UpdateMovement();
     }
 
+    #region NITRO
+    public void UpdateNitroManament()
+    {
+        if (CrossPlatformInputManager.GetButtonUp(inputNitro))
+        {
+            UseNitro();
+        }
+    }
+
+    private void UseNitro()
+    {
+        Debug.Log("UseNitro");
+        MaxSpeed = GetValueModifier(MaxSpeed, maxSpeedAdditiveModifier, maxSpeedPercentageModifier);
+        MaxSpeedTime = GetValueModifier(MaxSpeedTime, maxSpeedTimeAdditiveModifier, maxSpeedTimePercentageModifier);
+        BrakeCompletelyTime = GetValueModifier(BrakeCompletelyTime, brakeCompletelyTimeAdditiveModifier, brakeCompletelyTimePercentageModifier);
+    }
+
+    #endregion
+
+
+
+
+    #region BASIC MOVEMENT
     // this will compare with the speed of prev frame
     private void UpdateNearTrackerMovement()
     {
@@ -103,23 +152,25 @@ public class CarControl : MonoBehaviour
     {
         Tracker farTracker = myTrackers[TrackerType.Far];
         // update aHeadDistance of FarTracker, it will be = distance For Car To Stop completely
-        float a = (0f - maxSpeed) / timeToBrakeCompletely;
+        float a = (0f - MaxSpeed) / BrakeCompletelyTime;
         float t = (0f - currentSpeed) / a;
         float distanceForCarToStop = currentSpeed * t + 0.5f * a * t * t;
         farTracker.aHeadDistance = Mathf.Max(minLookAhead, distanceForCarToStop);
 
-
+        // stop farTracker in need, to avoid it is too far from the car
         if (farTracker.distanceTravelled - distanceTravelled > farTracker.aHeadDistance)
         {
             return;
         }
 
+        // moving farTracker
         float farTrackerSpeed = currentSpeed + 15f;
         if (farTracker.distanceTravelled - distanceTravelled > farTracker.aHeadDistance - minLookAhead)
         {
             farTrackerSpeed = currentSpeed + 5f;
         }
         farTracker.distanceTravelled += farTrackerSpeed * Time.deltaTime;
+
         farTracker.theGameObject.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(farTracker.distanceTravelled), thePathCreator.path.GetRotationAtDistance(farTracker.distanceTravelled));
     }
 
@@ -139,18 +190,18 @@ public class CarControl : MonoBehaviour
         float approachingCornerAngle = Mathf.Max(farTracker.approachingCornerAngleForCar, nearTracker.approachingCornerAngleForCar);
         approachingCornerAngle = Mathf.Min(approachingCornerAngle, cautiousMaxAngle);
         // if it's different to our current angle, we need to be cautious (i.e. slow down) a certain amount
-        float desiredSpeed = Mathf.Cos(Mathf.Deg2Rad * approachingCornerAngle) * maxSpeed;
+        float desiredSpeed = Mathf.Cos(Mathf.Deg2Rad * approachingCornerAngle) * MaxSpeed;
         desiredSpeed = Mathf.Max(desiredSpeed, minSpeedAtAnyCorner);
 
         float upComingCurrentSpeed = currentSpeed;
         if (desiredSpeed > currentSpeed)
         { // accel
-            upComingCurrentSpeed += Time.deltaTime * maxSpeed / timeToGetMaxSpeed;
+            upComingCurrentSpeed += Time.deltaTime * MaxSpeed / MaxSpeedTime;
             upComingCurrentSpeed = Mathf.Min(upComingCurrentSpeed, desiredSpeed);
         }
         else if (desiredSpeed < currentSpeed)
-        {//bake
-            upComingCurrentSpeed -= Time.deltaTime * maxSpeed / timeToBrakeCompletely;
+        { // bake
+            upComingCurrentSpeed -= Time.deltaTime * MaxSpeed / BrakeCompletelyTime;
             upComingCurrentSpeed = Mathf.Max(upComingCurrentSpeed, desiredSpeed);
         }
         currentSpeed = upComingCurrentSpeed;
@@ -160,5 +211,13 @@ public class CarControl : MonoBehaviour
     {
         distanceTravelled += currentSpeed * Time.deltaTime;
         transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(distanceTravelled), (thePathCreator.path.GetRotationAtDistance(distanceTravelled)));
+    }
+    #endregion
+
+
+
+    float GetValueModifier(float currentValue, float additiveModifier, float percentageModifier)
+    {
+        return (currentValue + additiveModifier) * (1 + percentageModifier / 100);
     }
 }

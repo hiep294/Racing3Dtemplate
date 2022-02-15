@@ -6,6 +6,10 @@ public class _note : MonoBehaviour
 {
     /*
      * 
+    + implement nitro effect without duration
+
+    + clear affects of nitro
+    
     + understanding how near tracker effect
     + go back to normal moz to use Gizmos
     + cos and tan for approachingCornerAngle
