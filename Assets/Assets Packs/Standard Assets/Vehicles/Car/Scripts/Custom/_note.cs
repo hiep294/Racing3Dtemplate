@@ -6,6 +6,19 @@ public class _note : MonoBehaviour
 {
     /*
      * 
+    + understanding how near tracker effect
+    + go back to normal moz to use Gizmos
+    + cos and tan for approachingCornerAngle
+    + research approachingCornerAngle with stiffness
+    + min speed at corner 
+    + calc cautiousnessRequired with approachingCornerAngle and with minLookAhead
+    + dynamic lookAhead: = time 
+    
+    + make smooth running of tracker
+
+    + calculate distance between two points in the path:
+    by calculate distanceTravelled
+    
     Course: Make a driving game in unity
     + Car Audio: should create audio Source => to make 3D audio
 
