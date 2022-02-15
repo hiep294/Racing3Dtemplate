@@ -6,7 +6,15 @@ public class _note : MonoBehaviour
 {
     /*
      * 
-    + Limit speed in road
+    + cleaning nitro
+    + stop using nitro
+        + time to change nitroMaxSpeed to BaseMaxSpeed
+    
+    + test baking time increse so much
+
+    + max distance between near tracker and car = 1 frame
+    + modified updateFarTracker
+    + test count in VertexPath
 
     + research wheelCollider without using library => to limit high speed
     + Thing about elements which can limit car speed
