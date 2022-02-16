@@ -15,10 +15,11 @@ public class CarControl : MonoBehaviour
     [Tooltip("Time from 0 to maxSpeed")] [SerializeField] [Min(0)] float baseMaxAccelTime = 5f;
     [Tooltip("MaxAccelTime could be changed by Nitro")] [SerializeField] float minOfMaxAccelTime = 0.5f;
 
-    float currentSpeed = 0;
-    float maxSpeed;
-    float maxAccelTime;  // time from 0 to MaxSpeed, will be consider as max time of accel
 
+    float maxSpeed;
+    DesiredTracker m_DesiredTracker = new DesiredTracker();
+    float currentSpeed = 0;
+    float maxAccelTime;  // time from 0 to MaxSpeed, will be consider as max time of accel
 
 
 
@@ -40,8 +41,12 @@ public class CarControl : MonoBehaviour
         public Vector3 initLocalScale;
         public GameObject theGameObject;
         public GameObject checkingPoint;
-        public float aHeadDistance; // how max far between the car and this tracker
-        public float approachingCornerAngleForCar;
+    }
+    [System.Serializable]
+    struct DesiredTracker
+    {
+        public float desiredSpeed;
+        public float distanceToThisCar;
     }
     float distanceTravelled;
     GameObject trackersContainer;
@@ -97,9 +102,7 @@ public class CarControl : MonoBehaviour
             theGameObject = GameObject.CreatePrimitive(PrimitiveType.Cylinder),
             checkingPoint = GameObject.CreatePrimitive(PrimitiveType.Cylinder),
             distanceTravelled = 0,
-            initLocalScale = new Vector3(4, 4, 4),
-            aHeadDistance = minLookAhead,
-            approachingCornerAngleForCar = 0
+            initLocalScale = new Vector3(4, 4, 4)
         };
 
         myTracker.theGameObject.transform.SetParent(trackersContainer.transform);
@@ -127,21 +130,18 @@ public class CarControl : MonoBehaviour
     void Update()
     {
         float minDistanceToStopCar = FindMinDistanceToStopCar(MaxSpeed, MaxBrakeTime);
-        float minDistanceToStopCarNitro = FindMinDistanceToStopCar(CalcIntendedNitroMaxSpeed(), CalcIntendedNitroMaxBrakeTime());
-        Debug.Log($"minDistanceToStopCar {minDistanceToStopCar} ; minDistanceToStopCarNitro {minDistanceToStopCarNitro}");
+        // float minDistanceToStopCarNitro = FindMinDistanceToStopCar(CalcIntendedNitroMaxSpeed(), CalcIntendedNitroMaxBrakeTime());
+
 #if UNITY_EDITOR
         UpdateTrackerMovement(minDistanceToStopCar);
 #endif
 
-        float desiredSpeed = FindDesiredSpeed(minDistanceToStopCar);
+        m_DesiredTracker = FindDesiredSpeed(minDistanceToStopCar);
 
+        UpdateMovement(m_DesiredTracker.desiredSpeed);
+
+        // normally, driver will go then open nitro
         UpdateNitroManament();
-
-        // handle brake or accel based on DesiredSpeed
-        UpdateCurrentSpeed(desiredSpeed);
-
-        UpdateMovement();
-
     }
 
 
@@ -228,25 +228,30 @@ public class CarControl : MonoBehaviour
         myTracker.theGameObject.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(myTracker.distanceTravelled), thePathCreator.path.GetRotationAtDistance(myTracker.distanceTravelled));
     }
 
-    private float FindDesiredSpeed(float distanceForCarToStop)
+    private DesiredTracker FindDesiredSpeed(float distanceToStopCar)
     {
         float desiredSpeed = 0;
+        float distanceToThisCar = 0;
         float approachingCornerAngle = 0;
 
         //* calc angle of points (between farTracker and this transform) and this transform
         float distanceCount = 0;
-        while (distanceCount < distanceForCarToStop + stepToCheckCornerAngle)
+        while (distanceCount < distanceToStopCar + stepToCheckCornerAngle)
         {
-            if (distanceCount > distanceForCarToStop)
+            if (distanceCount > distanceToStopCar)
             {
-                distanceCount = (Mathf.Ceil(distanceForCarToStop * 10)) / 10; // to avoid looping forever
+                distanceCount = (Mathf.Ceil(distanceToStopCar * 10)) / 10; // to avoid looping forever
             }
 
 
             myTracker.checkingPoint.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(distanceTravelled + distanceCount), thePathCreator.path.GetRotationAtDistance(distanceTravelled + distanceCount));
             float angleCornerTest = Vector3.Angle(myTracker.checkingPoint.transform.forward, transform.forward);
 
-            if (approachingCornerAngle < angleCornerTest) approachingCornerAngle = angleCornerTest;
+            if (approachingCornerAngle < angleCornerTest)
+            {
+                approachingCornerAngle = angleCornerTest;
+                distanceToThisCar = distanceCount;
+            };
 
             distanceCount += stepToCheckCornerAngle;
         }
@@ -265,10 +270,17 @@ public class CarControl : MonoBehaviour
         // if it's different to our current angle, we need to be cautious (i.e. slow down) a certain amount
         desiredSpeed = Mathf.Cos(Mathf.Deg2Rad * approachingCornerAngle) * MaxSpeed;
         desiredSpeed = Mathf.Max(desiredSpeed, minSpeedAtAnyCorner);
-        return desiredSpeed;
+
+        return new DesiredTracker()
+        {
+            desiredSpeed = desiredSpeed,
+            distanceToThisCar = distanceToThisCar
+        };
     }
 
-    void UpdateCurrentSpeed(float desiredSpeed)
+    // handle brake or accel based on DesiredSpeed
+    // will not check distance to desiredPoint like in UpdateNitro, because the start velocity of the car is zero, so it will be ok
+    void UpdateMovement(float desiredSpeed)
     {
         float upComingCurrentSpeed = currentSpeed;
         if (desiredSpeed > currentSpeed)
@@ -282,13 +294,12 @@ public class CarControl : MonoBehaviour
             upComingCurrentSpeed = Mathf.Max(upComingCurrentSpeed, desiredSpeed);
         }
         currentSpeed = upComingCurrentSpeed;
-    }
 
-    void UpdateMovement()
-    {
+        // update movement
         distanceTravelled += currentSpeed * Time.deltaTime;
         transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(distanceTravelled), (thePathCreator.path.GetRotationAtDistance(distanceTravelled)));
     }
+
 
     #endregion
 
