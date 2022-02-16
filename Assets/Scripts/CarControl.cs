@@ -108,7 +108,7 @@ public class CarControl : MonoBehaviour
         // Destroy the cylinder collider so it doesn'y cuase any issues with physics
         DestroyImmediate(myTracker.theGameObject.GetComponent<Collider>());
         // Disable the trackers mesh renderer so you can't see it in the game
-        //tracker.GetComponent<MeshRenderer>().enabled = false;
+        myTracker.theGameObject.GetComponent<MeshRenderer>().enabled = false;
         // Rotate and place the tracker
 
         // similar to tempPoint
@@ -117,6 +117,12 @@ public class CarControl : MonoBehaviour
         DestroyImmediate(myTracker.checkingPoint.GetComponent<Collider>());
 
         myTracker.theGameObject.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(myTracker.distanceTravelled), thePathCreator.path.GetRotationAtDistance(myTracker.distanceTravelled));
+
+#if UNITY_EDITOR
+        myTracker.checkingPoint.GetComponent<MeshRenderer>().enabled = true;
+        myTracker.theGameObject.GetComponent<MeshRenderer>().enabled = true;
+#endif
+
     }
 
     void Update()
@@ -125,7 +131,9 @@ public class CarControl : MonoBehaviour
 
         float minDistanceToStopCar = FindMinDistanceToStopCar();
 
+#if UNITY_EDITOR
         UpdateTrackerMovement(minDistanceToStopCar);
+#endif
 
         UpdateDesiredSpeed(minDistanceToStopCar);
 
@@ -228,7 +236,10 @@ public class CarControl : MonoBehaviour
 
             distanceCount += stepToCheckCornerAngle;
         }
-        //myTracker.tempPoint.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(distanceTravelled), thePathCreator.path.GetRotationAtDistance(distanceTravelled));
+
+#if UNITY_EDITOR
+        myTracker.checkingPoint.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(distanceTravelled), thePathCreator.path.GetRotationAtDistance(distanceTravelled));
+#endif
 
         /**
          * Handle Brake
