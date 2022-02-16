@@ -126,8 +126,9 @@ public class CarControl : MonoBehaviour
 
     void Update()
     {
-        float minDistanceToStopCar = FindMinDistanceToStopCar();
-
+        float minDistanceToStopCar = FindMinDistanceToStopCar(MaxSpeed, MaxBrakeTime);
+        float minDistanceToStopCarNitro = FindMinDistanceToStopCar(CalcIntendedNitroMaxSpeed(), CalcIntendedNitroMaxBrakeTime());
+        Debug.Log($"minDistanceToStopCar {minDistanceToStopCar} ; minDistanceToStopCarNitro {minDistanceToStopCarNitro}");
 #if UNITY_EDITOR
         UpdateTrackerMovement(minDistanceToStopCar);
 #endif
@@ -150,6 +151,19 @@ public class CarControl : MonoBehaviour
     bool IsUsingNitro() { return nitroRemainingTime > 0; }
     bool IsCompletedCleaningNitro() { return MaxSpeed == baseMaxSpeed; }
     bool IsCleaningNitro() { return !IsUsingNitro() && !IsCompletedCleaningNitro(); }
+
+    float CalcIntendedNitroMaxSpeed()
+    {
+        return Mathf.Max(minOfMaxSpeed, GetValueModifier(baseMaxSpeed, maxSpeedAdditiveModifier, maxSpeedPercentageModifier));
+    }
+    float CalcIntendedNitroMaxAccelTime()
+    {
+        return Mathf.Max(minOfMaxAccelTime, GetValueModifier(baseMaxAccelTime, maxAccelTimeAdditiveModifier, maxAccelTimePercentageModifier));
+    }
+    float CalcIntendedNitroMaxBrakeTime()
+    {
+        return Mathf.Max(minOfMaxBrakeTime, GetValueModifier(baseMaxBrakeTime, maxBrakeTimeAdditiveModifier, maxBrakeTimePercentageModifier));
+    }
 
     void UpdateNitroManament()
     {
@@ -174,9 +188,9 @@ public class CarControl : MonoBehaviour
     {
         numberOfTimesUsingNitro--;
         nitroRemainingTime = nitroDuration;
-        MaxSpeed = Mathf.Max(minOfMaxSpeed, GetValueModifier(baseMaxSpeed, maxSpeedAdditiveModifier, maxSpeedPercentageModifier));
-        MaxAccelTime = Mathf.Max(minOfMaxAccelTime, GetValueModifier(MaxAccelTime, maxAccelTimeAdditiveModifier, maxAccelTimePercentageModifier));
-        MaxBrakeTime = Mathf.Max(minOfMaxBrakeTime, GetValueModifier(MaxBrakeTime, maxBrakeTimeAdditiveModifier, maxBrakeTimePercentageModifier));
+        MaxSpeed = CalcIntendedNitroMaxSpeed();
+        MaxAccelTime = CalcIntendedNitroMaxAccelTime();
+        MaxBrakeTime = CalcIntendedNitroMaxBrakeTime();
     }
     void TurnOffNitro()
     {
@@ -197,10 +211,10 @@ public class CarControl : MonoBehaviour
 
     #region BASIC MOVEMENT
 
-    float FindMinDistanceToStopCar()
+    float FindMinDistanceToStopCar(float paramMaxSpeed, float paramMaxBrakeTime)
     {
         //* update aHeadDistance of FarTracker, it will be = distance For Car To Stop completely
-        float a = (0f - MaxSpeed) / MaxBrakeTime;
+        float a = (0f - paramMaxSpeed) / paramMaxBrakeTime;
         float t = (0f - currentSpeed) / a;
         float distanceForCarToStop = currentSpeed * t + 0.5f * a * t * t + currentSpeed * Time.deltaTime; // + currentSpeed * Time.deltaTime to avoid something small,
         return Mathf.Max(minLookAhead, distanceForCarToStop);
