@@ -695,7 +695,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   thePathCreator: {fileID: 563438850}
   baseMaxSpeed: 200
-  minOfMaxSpeed: 50
+  minOfMaxSpeed: 20
   minLookAhead: 5
   baseMaxAccelTime: 5
   minOfMaxAccelTime: 0.5

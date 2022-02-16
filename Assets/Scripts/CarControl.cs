@@ -40,7 +40,7 @@ public class CarControl : MonoBehaviour
         public float distanceTravelled;
         public Vector3 initLocalScale;
         public GameObject theGameObject;
-        public GameObject tempPoint;
+        public GameObject checkingPoint;
         public float aHeadDistance; // how max far between the car and this tracker
         public float approachingCornerAngleForCar;
     }
@@ -96,7 +96,7 @@ public class CarControl : MonoBehaviour
         myTracker = new Tracker()
         {
             theGameObject = GameObject.CreatePrimitive(PrimitiveType.Cylinder),
-            tempPoint = GameObject.CreatePrimitive(PrimitiveType.Cylinder),
+            checkingPoint = GameObject.CreatePrimitive(PrimitiveType.Cylinder),
             distanceTravelled = 0,
             initLocalScale = new Vector3(4, 4, 4),
             aHeadDistance = minLookAhead,
@@ -112,9 +112,9 @@ public class CarControl : MonoBehaviour
         // Rotate and place the tracker
 
         // similar to tempPoint
-        myTracker.tempPoint.transform.SetParent(trackersContainer.transform);
-        myTracker.tempPoint.GetComponent<MeshRenderer>().enabled = false;
-        DestroyImmediate(myTracker.tempPoint.GetComponent<Collider>());
+        myTracker.checkingPoint.transform.SetParent(trackersContainer.transform);
+        myTracker.checkingPoint.GetComponent<MeshRenderer>().enabled = false;
+        DestroyImmediate(myTracker.checkingPoint.GetComponent<Collider>());
 
         myTracker.theGameObject.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(myTracker.distanceTravelled), thePathCreator.path.GetRotationAtDistance(myTracker.distanceTravelled));
     }
@@ -123,9 +123,13 @@ public class CarControl : MonoBehaviour
     {
         UpdateNitroManament();
 
-        UpdateTrackerMovement();
+        float minDistanceToStopCar = FindMinDistanceToStopCar();
 
-        UpdateDesiredSpeed();
+#if UNITY_EDITOR
+        UpdateTrackerMovement(minDistanceToStopCar);
+#endif
+
+        UpdateDesiredSpeed(minDistanceToStopCar);
 
         // handle brake or accel based on DesiredSpeed
         UpdateCurrentSpeed();
@@ -188,38 +192,40 @@ public class CarControl : MonoBehaviour
 
     #region BASIC MOVEMENT
 
-    // this will compare with currentSpeed of this frame, because 
-    void UpdateTrackerMovement()
+    float FindMinDistanceToStopCar()
     {
         //* update aHeadDistance of FarTracker, it will be = distance For Car To Stop completely
         float a = (0f - MaxSpeed) / MaxBrakeTime;
         float t = (0f - currentSpeed) / a;
-        float distanceForCarToStop = currentSpeed * t + 0.5f * a * t * t;
-        myTracker.aHeadDistance = Mathf.Max(minLookAhead, distanceForCarToStop + currentSpeed * Time.deltaTime); // + currentSpeed * Time.deltaTime to avoid something small,
+        float distanceForCarToStop = currentSpeed * t + 0.5f * a * t * t + currentSpeed * Time.deltaTime; // + currentSpeed * Time.deltaTime to avoid something small,
+        return Mathf.Max(minLookAhead, distanceForCarToStop);
+    }
 
+    void UpdateTrackerMovement(float distanceForCarToStop)
+    {
         myTracker.distanceTravelled = myTracker.aHeadDistance + distanceTravelled;
 
         //* update position and rotation of farTracker;
         myTracker.theGameObject.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(myTracker.distanceTravelled), thePathCreator.path.GetRotationAtDistance(myTracker.distanceTravelled));
     }
 
-    private void UpdateDesiredSpeed()
+    private void UpdateDesiredSpeed(float distanceForCarToStop)
     {
         float approachingCornerAngle = 0;
 
-        //* calc angle of Tracker and this transform
-        myTracker.approachingCornerAngleForCar = Vector3.Angle(myTracker.theGameObject.transform.forward, transform.forward);
-        if (approachingCornerAngle < myTracker.approachingCornerAngleForCar)
-        {
-            approachingCornerAngle = myTracker.approachingCornerAngleForCar;
-        }
-
         //* calc angle of points (between farTracker and this transform) and this transform
         float distanceCount = 0;
-        while (distanceCount < myTracker.aHeadDistance)
+        while (distanceCount < distanceForCarToStop + stepToCheckCornerAngle)
         {
-            myTracker.tempPoint.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(distanceTravelled + distanceCount), thePathCreator.path.GetRotationAtDistance(distanceTravelled + distanceCount));
-            float angleCornerTest = Vector3.Angle(myTracker.tempPoint.transform.forward, transform.forward);
+            if (distanceCount > distanceForCarToStop)
+            {
+                // but distanceCount will never > distanceForCarToStop + stepToCheckCornerAngle
+                distanceCount = distanceForCarToStop;
+                // make sure to check points with stepToCheckCornerAngle and the point in distanceForCarToStop
+            }
+
+            myTracker.checkingPoint.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(distanceTravelled + distanceCount), thePathCreator.path.GetRotationAtDistance(distanceTravelled + distanceCount));
+            float angleCornerTest = Vector3.Angle(myTracker.checkingPoint.transform.forward, transform.forward);
 
             if (approachingCornerAngle < angleCornerTest) approachingCornerAngle = angleCornerTest;
 

@@ -6,7 +6,8 @@ public class _note : MonoBehaviour
 {
     /*
      * 
-    +
+    + check nitro available to use or not
+
     + clean coding
         UpdateDesiredSpeed
     
