@@ -19,7 +19,7 @@ public class CarControl : MonoBehaviour
     float maxSpeed;
     DesiredTracker m_DesiredTracker = new DesiredTracker()
     {
-        distanceTrackerToThisCar = 0,
+        distanceTravelled = 0,
 
     };
     float currentSpeed = 0;
@@ -51,7 +51,7 @@ public class CarControl : MonoBehaviour
     struct DesiredTracker
     {
         // public float desiredSpeed;
-        public float distanceTrackerToThisCar;
+        public float distanceTravelled;
         public float approachingCornerAngle;
     }
     float distanceTravelled;
@@ -189,9 +189,16 @@ public class CarControl : MonoBehaviour
 
         // find desiredTrack from at current myTracker.frontPoint's position, rangeAhead = 
         float frontPointOfMyTracker = distanceTravelled + minDistanceToStopCar;
-        DesiredTracker upCommingDesiredTracker = FindDesiredTracker(
+        DesiredTracker intendedDesiredTracker = FindDesiredTracker(
             frontPointOfMyTracker,
             intendedMinDistanceToStopCar - minDistanceToStopCar);
+        // compare to currentDesiredTracker
+        if (intendedDesiredTracker.approachingCornerAngle < currentDesiredTracker.approachingCornerAngle)
+        {
+            intendedDesiredTracker = currentDesiredTracker;
+        }
+
+        float intendedDesiredSpeed = FindDesiredSpeed(intendedDesiredTracker.approachingCornerAngle, Mathf.Max(MaxSpeed, intendedNitroMaxSpeed));
 
 
         return true;
@@ -288,10 +295,10 @@ public class CarControl : MonoBehaviour
     */
     private DesiredTracker FindDesiredTracker(float startDistanceTravelled, float rangeAhead)
     {
-        float distanceToThisCar = 0;
         float approachingCornerAngle = 0;
 
         //* calc angle of points (between farTracker and this transform) and this transform
+        float suitableDistanceCount = 0; //cache for appropriate approachingCornerAngle
         float distanceCount = 0;
         while (distanceCount < rangeAhead + stepToCheckCornerAngle)
         {
@@ -307,15 +314,11 @@ public class CarControl : MonoBehaviour
             if (approachingCornerAngle < angleCornerTest)
             {
                 approachingCornerAngle = angleCornerTest;
-                distanceToThisCar = distanceCount;
+                suitableDistanceCount = distanceCount;
             };
 
             distanceCount += stepToCheckCornerAngle;
         }
-
-#if UNITY_EDITOR
-        myTracker.checkingPoint.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(startDistanceTravelled), thePathCreator.path.GetRotationAtDistance(startDistanceTravelled));
-#endif
 
         /**
          * Handle Brake
@@ -326,10 +329,13 @@ public class CarControl : MonoBehaviour
         approachingCornerAngle = Mathf.Min(approachingCornerAngle, cautiousMaxAngle);
         // if it's different to our current angle, we need to be cautious (i.e. slow down) a certain amount
 
+#if UNITY_EDITOR
+        myTracker.checkingPoint.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(startDistanceTravelled), thePathCreator.path.GetRotationAtDistance(startDistanceTravelled));
+#endif
 
         return new DesiredTracker()
         {
-            distanceTrackerToThisCar = distanceToThisCar,
+            distanceTravelled = suitableDistanceCount + startDistanceTravelled,
             approachingCornerAngle = approachingCornerAngle
         };
     }
