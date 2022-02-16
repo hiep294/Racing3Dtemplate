@@ -215,12 +215,11 @@ public class CarControl : MonoBehaviour
         float distanceCount = 0;
         while (distanceCount < distanceForCarToStop + stepToCheckCornerAngle)
         {
-            // if (distanceCount > distanceForCarToStop)
-            // {
-            //     // but distanceCount will never > distanceForCarToStop + stepToCheckCornerAngle
-            //     distanceCount = distanceForCarToStop;
-            //     // make sure to check points with stepToCheckCornerAngle and the point in distanceForCarToStop
-            // }
+            if (distanceCount > distanceForCarToStop)
+            {
+                distanceCount = (Mathf.Ceil(distanceForCarToStop * 10)) / 10; // to avoid looping forever
+            }
+
 
             myTracker.checkingPoint.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(distanceTravelled + distanceCount), thePathCreator.path.GetRotationAtDistance(distanceTravelled + distanceCount));
             float angleCornerTest = Vector3.Angle(myTracker.checkingPoint.transform.forward, transform.forward);
