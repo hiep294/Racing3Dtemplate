@@ -125,9 +125,7 @@ public class CarControl : MonoBehaviour
 
         float minDistanceToStopCar = FindMinDistanceToStopCar();
 
-#if UNITY_EDITOR
         UpdateTrackerMovement(minDistanceToStopCar);
-#endif
 
         UpdateDesiredSpeed(minDistanceToStopCar);
 
@@ -203,7 +201,7 @@ public class CarControl : MonoBehaviour
 
     void UpdateTrackerMovement(float distanceForCarToStop)
     {
-        myTracker.distanceTravelled = myTracker.aHeadDistance + distanceTravelled;
+        myTracker.distanceTravelled = distanceForCarToStop + distanceTravelled;
 
         //* update position and rotation of farTracker;
         myTracker.theGameObject.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(myTracker.distanceTravelled), thePathCreator.path.GetRotationAtDistance(myTracker.distanceTravelled));
@@ -217,12 +215,12 @@ public class CarControl : MonoBehaviour
         float distanceCount = 0;
         while (distanceCount < distanceForCarToStop + stepToCheckCornerAngle)
         {
-            if (distanceCount > distanceForCarToStop)
-            {
-                // but distanceCount will never > distanceForCarToStop + stepToCheckCornerAngle
-                distanceCount = distanceForCarToStop;
-                // make sure to check points with stepToCheckCornerAngle and the point in distanceForCarToStop
-            }
+            // if (distanceCount > distanceForCarToStop)
+            // {
+            //     // but distanceCount will never > distanceForCarToStop + stepToCheckCornerAngle
+            //     distanceCount = distanceForCarToStop;
+            //     // make sure to check points with stepToCheckCornerAngle and the point in distanceForCarToStop
+            // }
 
             myTracker.checkingPoint.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(distanceTravelled + distanceCount), thePathCreator.path.GetRotationAtDistance(distanceTravelled + distanceCount));
             float angleCornerTest = Vector3.Angle(myTracker.checkingPoint.transform.forward, transform.forward);
