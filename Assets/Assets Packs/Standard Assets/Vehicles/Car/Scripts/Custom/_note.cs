@@ -6,6 +6,10 @@ public class _note : MonoBehaviour
 {
     /*
      * 
+    +
+    + clean coding
+        UpdateDesiredSpeed
+    
     + cleaning nitro
     + stop using nitro
         + time to change nitroMaxSpeed to BaseMaxSpeed

@@ -695,20 +695,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   thePathCreator: {fileID: 563438850}
   baseMaxSpeed: 200
+  minOfMaxSpeed: 50
   minLookAhead: 5
-  baseMaxSpeedTime: 5
+  baseMaxAccelTime: 5
+  minOfMaxAccelTime: 0.5
   minSpeedAtAnyCorner: 20
-  baseBrakeCompletelyTime: 1
+  baseMaxBrakeTime: 1
+  minOfMaxBrakeTime: 0.5
   stepToCheckCornerAngle: 5
   maxSpeedAdditiveModifier: 100
   maxSpeedPercentageModifier: 100
-  maxSpeedTimeAdditiveModifier: -1
-  maxSpeedTimePercentageModifier: -10
-  brakeCompletelyTimeAdditiveModifier: 0.5
-  brakeCompletelyTimePercentageModifier: -10
+  maxAccelTimeAdditiveModifier: -1
+  maxAccelTimePercentageModifier: -10
+  maxBrakeTimeAdditiveModifier: 100
+  maxBrakeTimePercentageModifier: -10
   inputNitro: Jump
-  duration: 3
-  timesOfUsingNitro: 2
+  nitroDuration: 30
+  numberOfTimesUsingNitro: 2
+  cleaningNitroDuration: 2
 --- !u!1 &106452766
 GameObject:
   m_ObjectHideFlags: 0
