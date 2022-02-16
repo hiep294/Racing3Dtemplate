@@ -209,6 +209,10 @@ public class CarControl : MonoBehaviour
         float t = (intendedDesiredSpeed - currentSpeed) / a;
         float s = (float)(currentSpeed * t + 0.5 * a * t * t);
 
+#if UNITY_EDITOR
+        myTracker.checkingPoint.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(distanceTravelled + intendedMinDistanceToStopCar), thePathCreator.path.GetRotationAtDistance(distanceTravelled + intendedMinDistanceToStopCar));
+#endif
+
         return s <= distanceBetween_IntendedDesiredTracker_And_Car;
     }
 
