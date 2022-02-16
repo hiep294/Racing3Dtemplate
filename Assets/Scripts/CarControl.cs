@@ -16,7 +16,6 @@ public class CarControl : MonoBehaviour
     [Tooltip("MaxAccelTime could be changed by Nitro")] [SerializeField] float minOfMaxAccelTime = 0.5f;
 
     float currentSpeed = 0;
-    float desiredSpeed = 0;
     float maxSpeed;
     float maxAccelTime;  // time from 0 to MaxSpeed, will be consider as max time of accel
 
@@ -127,18 +126,18 @@ public class CarControl : MonoBehaviour
 
     void Update()
     {
-        UpdateNitroManament();
-
         float minDistanceToStopCar = FindMinDistanceToStopCar();
 
 #if UNITY_EDITOR
         UpdateTrackerMovement(minDistanceToStopCar);
 #endif
 
-        UpdateDesiredSpeed(minDistanceToStopCar);
+        float desiredSpeed = FindDesiredSpeed(minDistanceToStopCar);
+
+        UpdateNitroManament();
 
         // handle brake or accel based on DesiredSpeed
-        UpdateCurrentSpeed();
+        UpdateCurrentSpeed(desiredSpeed);
 
         UpdateMovement();
 
@@ -215,8 +214,9 @@ public class CarControl : MonoBehaviour
         myTracker.theGameObject.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(myTracker.distanceTravelled), thePathCreator.path.GetRotationAtDistance(myTracker.distanceTravelled));
     }
 
-    private void UpdateDesiredSpeed(float distanceForCarToStop)
+    private float FindDesiredSpeed(float distanceForCarToStop)
     {
+        float desiredSpeed = 0;
         float approachingCornerAngle = 0;
 
         //* calc angle of points (between farTracker and this transform) and this transform
@@ -251,9 +251,10 @@ public class CarControl : MonoBehaviour
         // if it's different to our current angle, we need to be cautious (i.e. slow down) a certain amount
         desiredSpeed = Mathf.Cos(Mathf.Deg2Rad * approachingCornerAngle) * MaxSpeed;
         desiredSpeed = Mathf.Max(desiredSpeed, minSpeedAtAnyCorner);
+        return desiredSpeed;
     }
 
-    void UpdateCurrentSpeed()
+    void UpdateCurrentSpeed(float desiredSpeed)
     {
         float upComingCurrentSpeed = currentSpeed;
         if (desiredSpeed > currentSpeed)
