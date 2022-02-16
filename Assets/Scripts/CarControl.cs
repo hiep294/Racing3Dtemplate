@@ -24,7 +24,6 @@ public class CarControl : MonoBehaviour
     };
     float currentSpeed = 0;
     float maxAccelTime;  // time from 0 to MaxSpeed, will be consider as max time of accel
-    float desiredSpeed;
 
 
 
@@ -59,6 +58,8 @@ public class CarControl : MonoBehaviour
     Tracker myTracker;
     [SerializeField] float stepToCheckCornerAngle = 5f; // farTracker's aHeadDistance will devide it into parts by this step; => to find maxApproachingCornerAngle
     float maxBrakeTime; // time from MaxSpeed to 0, will be consider as max time of brake
+    float minDistanceToStopCar;
+    float desiredSpeed;
 
 
 
@@ -137,18 +138,18 @@ public class CarControl : MonoBehaviour
     {
         UpdateMovement(desiredSpeed); // desiredSpeed with prev Time.deltaTime
 
-        float minDistanceToStopCar = FindMinDistanceToStopCar(MaxSpeed, MaxBrakeTime);
+        minDistanceToStopCar = FindMinDistanceToStopCar(MaxSpeed, MaxBrakeTime);
         // float minDistanceToStopCarNitro = FindMinDistanceToStopCar(CalcIntendedNitroMaxSpeed(), CalcIntendedNitroMaxBrakeTime());
 
 #if UNITY_EDITOR
-        UpdateTrackerFrontPointMovement(minDistanceToStopCar);
+        UpdateTrackerFrontPointMovement();
 #endif
 
         m_DesiredTracker = FindDesiredTracker(distanceTravelled, minDistanceToStopCar);
         // update desiredSpeed;
         desiredSpeed = FindDesiredSpeed(m_DesiredTracker.approachingCornerAngle, MaxSpeed);
 
-        UpdateNitroManament(m_DesiredTracker, minDistanceToStopCar);
+        UpdateNitroManament(m_DesiredTracker);
     }
 
 
@@ -156,7 +157,7 @@ public class CarControl : MonoBehaviour
 
 
     #region NITRO
-    void UpdateNitroManament(DesiredTracker currentDesiredTracker, float minDistanceToStopCar)
+    void UpdateNitroManament(DesiredTracker currentDesiredTracker)
     {
         nitroRemainingTime -= Time.deltaTime;
         if (!IsUsingNitro())
@@ -169,23 +170,24 @@ public class CarControl : MonoBehaviour
             CleanNitro();
         }
 
-        canUseNitroSavely = CheckToUseNitroSavely(currentDesiredTracker, minDistanceToStopCar);
+        canUseNitroSavely = CheckToUseNitroSavely(currentDesiredTracker);
         if (CrossPlatformInputManager.GetButtonUp(inputNitro) && canUseNitroSavely)
         {
             UseNitro();
         }
     }
 
-    bool CheckToUseNitroSavely(DesiredTracker currentDesiredTracker, float minDistanceToStopCar)
+    // find intendedDesiredTracker with nitro, whether the car can brake in time or not (detail: whether the car's speed can be intendedDesiredSpeed when it go to intendedDesiredTracker)
+    bool CheckToUseNitroSavely(DesiredTracker currentDesiredTracker)
     {
         if (IsUsingNitro() || numberOfTimesUsingNitro <= 0) return false;
+
         float intendedNitroMaxSpeed = CalcIntendedNitroMaxSpeed();
         float intendedNitroMaxBrakeTime = CalcIntendedNitroMaxBrakeTime();
 
         float intendedMinDistanceToStopCar = FindMinDistanceToStopCar(intendedNitroMaxSpeed, intendedNitroMaxBrakeTime);
         float rangeAhead = intendedMinDistanceToStopCar - minDistanceToStopCar;
-        if (intendedMinDistanceToStopCar <= minDistanceToStopCar) return true;
-
+        if (intendedMinDistanceToStopCar <= minDistanceToStopCar) return true; // has been validated in normal case
 
         // find desiredTrack from at current myTracker.frontPoint's position, rangeAhead = 
         float frontPointOfMyTracker = distanceTravelled + minDistanceToStopCar;
@@ -193,15 +195,21 @@ public class CarControl : MonoBehaviour
             frontPointOfMyTracker,
             intendedMinDistanceToStopCar - minDistanceToStopCar);
         // compare to currentDesiredTracker
-        if (intendedDesiredTracker.approachingCornerAngle < currentDesiredTracker.approachingCornerAngle)
-        {
-            intendedDesiredTracker = currentDesiredTracker;
-        }
+        if (intendedDesiredTracker.approachingCornerAngle <= currentDesiredTracker.approachingCornerAngle) return true; // has been validated in normal case
 
         float intendedDesiredSpeed = FindDesiredSpeed(intendedDesiredTracker.approachingCornerAngle, Mathf.Max(MaxSpeed, intendedNitroMaxSpeed));
 
+        if (intendedDesiredSpeed >= currentSpeed) return true; // normal case of using nitro
 
-        return true;
+        // now intendedDesiredSpeed < currentSpeed,
+        // check brake, and the car has to brake more than prev
+        float distanceBetween_IntendedDesiredTracker_And_Car = intendedDesiredTracker.distanceTravelled - distanceTravelled;
+
+        float a = -intendedNitroMaxSpeed / intendedNitroMaxBrakeTime;
+        float t = (intendedDesiredSpeed - currentSpeed) / a;
+        float s = (float)(currentSpeed * t + 0.5 * a * t * t);
+
+        return s <= distanceBetween_IntendedDesiredTracker_And_Car;
     }
 
     bool IsUsingNitro() { return nitroRemainingTime > 0; }
@@ -282,9 +290,9 @@ public class CarControl : MonoBehaviour
         return Mathf.Max(minLookAhead, distanceForCarToStop);
     }
 
-    void UpdateTrackerFrontPointMovement(float distanceForCarToStop)
+    void UpdateTrackerFrontPointMovement()
     {
-        float frontPointDistanceTravelled = distanceForCarToStop + distanceTravelled;
+        float frontPointDistanceTravelled = minDistanceToStopCar + distanceTravelled;
 
         //* update position and rotation of farTracker;
         myTracker.frontPoint.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(frontPointDistanceTravelled), thePathCreator.path.GetRotationAtDistance(frontPointDistanceTravelled));
