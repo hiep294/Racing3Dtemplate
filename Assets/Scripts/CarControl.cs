@@ -88,6 +88,7 @@ public class CarControl : MonoBehaviour
     public float MaxSpeed { get => maxSpeed; set => maxSpeed = value; }
     public float MaxAccelTime { get => maxAccelTime; set => maxAccelTime = value; }
     public float MaxBrakeTime { get => maxBrakeTime; set => maxBrakeTime = value; }
+    public bool CanUseNitroSavely { get => canUseNitroSavely; set => canUseNitroSavely = value; }
 
     void Awake()
     {
@@ -170,8 +171,8 @@ public class CarControl : MonoBehaviour
             CleanNitro();
         }
 
-        canUseNitroSavely = CheckToUseNitroSavely(currentDesiredTracker);
-        if (CrossPlatformInputManager.GetButtonUp(inputNitro) && canUseNitroSavely)
+        CanUseNitroSavely = CheckToUseNitroSavely(currentDesiredTracker);
+        if (CrossPlatformInputManager.GetButtonUp(inputNitro) && CanUseNitroSavely)
         {
             UseNitro();
         }
@@ -236,8 +237,9 @@ public class CarControl : MonoBehaviour
         return Mathf.Max(minOfMaxBrakeTime, GetValueModifier(baseMaxBrakeTime, maxBrakeTimeAdditiveModifier, maxBrakeTimePercentageModifier));
     }
 
-    void UseNitro()
+    public void UseNitro()
     {
+        if (!CanUseNitroSavely) return;
         numberOfTimesUsingNitro--;
         nitroRemainingTime = nitroDuration;
         MaxSpeed = CalcIntendedNitroMaxSpeed();
