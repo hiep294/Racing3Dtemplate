@@ -81,14 +81,14 @@ public class CarControl : MonoBehaviour
     [SerializeField] int numberOfTimesUsingNitro = 2;
     [SerializeField] float cleaningNitroDuration = 2;
     float nitroRemainingTime = -Mathf.Infinity;
-    bool canUseNitroSavely = false;
+    float preparingNitroRemaining = Mathf.Infinity;
 
 
 
     public float MaxSpeed { get => maxSpeed; set => maxSpeed = value; }
     public float MaxAccelTime { get => maxAccelTime; set => maxAccelTime = value; }
     public float MaxBrakeTime { get => maxBrakeTime; set => maxBrakeTime = value; }
-    public bool CanUseNitroSavely { get => canUseNitroSavely; set => canUseNitroSavely = value; }
+    public float PreparingNitroRemaining { get => preparingNitroRemaining; set => preparingNitroRemaining = value; }
 
     void Awake()
     {
@@ -171,11 +171,11 @@ public class CarControl : MonoBehaviour
             CleanNitro();
         }
 
-        CanUseNitroSavely = CheckToUseNitroSavely(currentDesiredTracker);
-        if (CrossPlatformInputManager.GetButtonUp(inputNitro) && CanUseNitroSavely)
+        if (CrossPlatformInputManager.GetButtonUp(inputNitro))
         {
-            UseNitro();
+            PrepareToUseNitro();
         }
+        UseNitro();
     }
 
     // find intendedDesiredTracker with nitro, whether the car can brake in time or not (detail: whether the car's speed can be intendedDesiredSpeed when it go to intendedDesiredTracker)
@@ -264,15 +264,27 @@ public class CarControl : MonoBehaviour
         return Mathf.Max(minOfMaxBrakeTime, GetValueModifier(baseMaxBrakeTime, maxBrakeTimeAdditiveModifier, maxBrakeTimePercentageModifier));
     }
 
+    public void PrepareToUseNitro()
+    {
+        PreparingNitroRemaining = 0;
+        Debug.Log("PreparingNitroRemaining");
+    }
     public void UseNitro()
     {
-        if (!CanUseNitroSavely) return;
+        PreparingNitroRemaining -= Time.deltaTime * 2;
+
+        if (PreparingNitroRemaining > 0) return;
+        PreparingNitroRemaining = Mathf.Infinity;
+        Debug.Log("Use nitro");
         numberOfTimesUsingNitro--;
         nitroRemainingTime = nitroDuration;
         MaxSpeed = CalcIntendedNitroMaxSpeed();
         MaxAccelTime = CalcIntendedNitroMaxAccelTime();
         MaxBrakeTime = CalcIntendedNitroMaxBrakeTime();
     }
+
+
+
     void TurnOffNitro()
     {
         nitroRemainingTime = -Mathf.Infinity;

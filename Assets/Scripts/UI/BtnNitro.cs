@@ -16,13 +16,10 @@ public class BtnNitro : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
-    {
-        myBtn.interactable = playerCarControl.CanUseNitroSavely;
-    }
 
+    // trigger by event
     public void OnClick()
     {
-        playerCarControl.UseNitro();
+        playerCarControl.PrepareToUseNitro();
     }
 }

@@ -6,6 +6,8 @@ public class _note : MonoBehaviour
 {
     /*
      * 
+    + no check nitro per frame, check after user click
+
     float distanceStep = Mathf.Floor(currentSpeed * Time.deltaTime * 10) / 10;
         int count = numberOfStepToCheckCornerAngle;
     => will be ok and performance for normal case, but can not use for nitro case
