@@ -185,10 +185,9 @@ public class CarControl : MonoBehaviour
 
         float intendedNitroMaxSpeed = CalcIntendedNitroMaxSpeed();
         float intendedNitroMaxBrakeTime = CalcIntendedNitroMaxBrakeTime();
-
-        float intendedMinDistanceToStopCar = FindMinDistanceToStopCar(intendedNitroMaxSpeed, intendedNitroMaxBrakeTime);
+        float intendedMinDistanceToStopCar = FindMinDistanceToStopCar_IfUseNitroNow(intendedNitroMaxSpeed, intendedNitroMaxBrakeTime);
         float rangeAhead = intendedMinDistanceToStopCar - minDistanceToStopCar;
-        if (intendedMinDistanceToStopCar <= minDistanceToStopCar) return true; // has been validated in normal case
+        if (rangeAhead <= 0) return true; // has been validated in normal case
 
         // find desiredTrack from at current myTracker.frontPoint's position, rangeAhead = 
         float frontPointOfMyTracker = distanceTravelled + minDistanceToStopCar;
@@ -217,7 +216,10 @@ public class CarControl : MonoBehaviour
         return distanceAvailableFor_CurrentSpeed_downTo_IntendedDesiredSpeed <= distanceBetween_IntendedDesiredTracker_And_Car;
     }
 
-
+    float FindMinDistanceToStopCar_IfUseNitroNow(float intendedNitroMaxSpeed, float intendedNitroMaxBrakeTime)
+    {
+        return FindMinDistanceToStopCar(intendedNitroMaxSpeed, intendedNitroMaxBrakeTime);
+    }
 
     bool IsUsingNitro() { return nitroRemainingTime > 0; }
     bool IsCompletedCleaningNitro() { return MaxSpeed == baseMaxSpeed; }
@@ -289,6 +291,7 @@ public class CarControl : MonoBehaviour
         transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(distanceTravelled), (thePathCreator.path.GetRotationAtDistance(distanceTravelled)));
     }
 
+    // the car will brake
     float FindMinDistanceToStopCar(float paramMaxSpeed, float paramMaxBrakeTime)
     {
         //* update aHeadDistance of FarTracker, it will be = distance For Car To Stop completely
