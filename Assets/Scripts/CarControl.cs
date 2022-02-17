@@ -80,14 +80,17 @@ public class CarControl : MonoBehaviour
     [SerializeField] float nitroDuration = 3f;
     [SerializeField] int numberOfTimesUsingNitro = 2;
     [SerializeField] float cleaningNitroDuration = 2;
+    [SerializeField] float maxApproachingCornerAngle = 30;
     float nitroRemainingTime = -Mathf.Infinity;
     float preparingNitroRemaining = Mathf.Infinity;
 
-
-
     public float MaxSpeed { get => maxSpeed; set => maxSpeed = value; }
     public float MaxAccelTime { get => maxAccelTime; set => maxAccelTime = value; }
-    public float MaxBrakeTime { get => maxBrakeTime; set => maxBrakeTime = value; }
+    public float MaxBrakeTime
+    {
+        get => maxBrakeTime;
+        set => maxBrakeTime = value;
+    }
     public float PreparingNitroRemaining { get => preparingNitroRemaining; set => preparingNitroRemaining = value; }
     public int NumberOfTimesUsingNitro { get => numberOfTimesUsingNitro; set => numberOfTimesUsingNitro = value; }
 
@@ -138,6 +141,11 @@ public class CarControl : MonoBehaviour
 
     void Update()
     {
+        if (m_DesiredTracker.approachingCornerAngle > maxApproachingCornerAngle && IsUsingNitro())
+        {
+            StopImmediatelyNitro(m_DesiredTracker); // this will make the maxBrakeTime change to savely handle at corner
+        }
+
         UpdateMovement(desiredSpeed); // desiredSpeed with prev Time.deltaTime
 
         minDistanceToStopCar = FindMinDistanceToStopCar(MaxSpeed, MaxBrakeTime);
@@ -159,26 +167,6 @@ public class CarControl : MonoBehaviour
 
 
     #region NITRO
-    void UpdateNitroManament(DesiredTracker currentDesiredTracker)
-    {
-        nitroRemainingTime -= Time.deltaTime;
-        if (!IsUsingNitro())
-        {
-            TurnOffNitro();
-        }
-
-        if (IsCleaningNitro())
-        {
-            CleanNitro();
-        }
-
-        if (CrossPlatformInputManager.GetButtonUp(inputNitro))
-        {
-            PrepareToUseNitro();
-        }
-        UseNitro(currentDesiredTracker);
-    }
-
     bool IsUsingNitro() { return nitroRemainingTime > 0; }
     bool IsCompletedCleaningNitro() { return Mathf.Approximately(MaxSpeed, baseMaxSpeed); }
     bool IsCleaningNitro() { return !IsUsingNitro() && !IsCompletedCleaningNitro(); }
@@ -201,6 +189,42 @@ public class CarControl : MonoBehaviour
     float CalcIntendedNitroMaxBrakeTime()
     {
         return Mathf.Max(minOfMaxBrakeTime, GetValueModifier(baseMaxBrakeTime, maxBrakeTimeAdditiveModifier, maxBrakeTimePercentageModifier));
+    }
+
+    void UpdateNitroManament(DesiredTracker currentDesiredTracker)
+    {
+        nitroRemainingTime -= Time.deltaTime;
+        bool isUsingNitro = IsUsingNitro();
+        if (!isUsingNitro)
+        {
+            TurnOffNitro();
+        }
+
+        if (IsCleaningNitro())
+        {
+            CleanNitro();
+        }
+
+        if (CrossPlatformInputManager.GetButtonUp(inputNitro))
+        {
+            PrepareToUseNitro();
+        }
+        UseNitro(currentDesiredTracker); // this will change MaxBrakeTime
+    }
+
+    private void StopImmediatelyNitro(DesiredTracker currentDesiredTracker)
+    {
+        TurnOffNitro(); // this will change MaxBrakeTime
+        CleanNitroCompletely();
+        // setup brakeTime corresponding to maxBrakeTime_of Nitro
+        // currentSpeed also need to change immediately
+        float v = FindDesiredSpeed(currentDesiredTracker.approachingCornerAngle, MaxSpeed);
+        float s = currentDesiredTracker.distanceTravelled - distanceTravelled;
+        float a = (0 - baseMaxSpeed) / baseMaxBrakeTime;
+        // v*v -vo * vo = 2as // https://vietjack.com/vat-ly-lop-10/xac-dinh-van-toc-gia-toc-quang-duong-trong-chuyen-dong-thang-bien-doi-deu.jsp
+        float vo = Mathf.Sqrt(v * v - 2 * a * s);
+        currentSpeed = vo;
+        Debug.Log($"currentSpeed {currentSpeed} ; v {v}");
     }
 
     public void PrepareToUseNitro()
@@ -237,7 +261,11 @@ public class CarControl : MonoBehaviour
     {
         float maxSpeedNitro = Mathf.Max(minOfMaxSpeed, GetValueModifier(baseMaxSpeed, maxSpeedAdditiveModifier, maxSpeedPercentageModifier));
         MaxSpeed += (baseMaxSpeed - maxSpeedNitro) * Time.deltaTime / cleaningNitroDuration;
-        if (MaxSpeed < baseMaxSpeed) { MaxSpeed = baseMaxSpeed; }
+        if (MaxSpeed < baseMaxSpeed) { CleanNitroCompletely(); }
+    }
+    void CleanNitroCompletely()
+    {
+        MaxSpeed = baseMaxSpeed;
     }
 
     #endregion
