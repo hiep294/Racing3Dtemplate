@@ -6,6 +6,7 @@ public class _note : MonoBehaviour
 {
     /*
      * 
+    check savely when using nitro
     + no check nitro per frame, check after user click
 
     float distanceStep = Mathf.Floor(currentSpeed * Time.deltaTime * 10) / 10;

@@ -47,7 +47,7 @@ public class CarControl : MonoBehaviour
         public GameObject checkingPoint;
     }
     [System.Serializable]
-    struct DesiredTracker
+    public struct DesiredTracker
     {
         // public float desiredSpeed;
         public float distanceTravelled;
@@ -176,7 +176,7 @@ public class CarControl : MonoBehaviour
         {
             PrepareToUseNitro();
         }
-        UseNitro();
+        UseNitro(currentDesiredTracker);
     }
 
     bool IsUsingNitro() { return nitroRemainingTime > 0; }
@@ -184,7 +184,7 @@ public class CarControl : MonoBehaviour
     bool IsCleaningNitro() { return !IsUsingNitro() && !IsCompletedCleaningNitro(); }
     public bool ShouldPrepareNitro()
     {
-        return !IsUsingNitro() && IsCompletedCleaningNitro() && NumberOfTimesUsingNitro > 0;
+        return !IsUsingNitro() && IsCompletedCleaningNitro() && NumberOfTimesUsingNitro > 0 && PreparingNitroRemaining == Mathf.Infinity;
     }
 
     // if use nitro now, IntendedNitroMaxSpeed will be calc
@@ -211,18 +211,27 @@ public class CarControl : MonoBehaviour
             PreparingNitroRemaining = 0;
         }
     }
-    public void UseNitro()
+    void UseNitro(DesiredTracker currentDesiredTracker)
     {
         PreparingNitroRemaining -= Time.deltaTime * 2;
 
         if (PreparingNitroRemaining > 0) return;
         PreparingNitroRemaining = Mathf.Infinity;
-        Debug.Log("Use nitro");
-        NumberOfTimesUsingNitro--;
-        nitroRemainingTime = nitroDuration;
-        MaxSpeed = CalcIntendedNitroMaxSpeed();
-        MaxAccelTime = CalcIntendedNitroMaxAccelTime();
-        MaxBrakeTime = CalcIntendedNitroMaxBrakeTime();
+
+        bool savelyToUseNitro = CheckToUseNitroSavely(currentDesiredTracker);
+
+        if (savelyToUseNitro)
+        {
+            NumberOfTimesUsingNitro--;
+            nitroRemainingTime = nitroDuration;
+            MaxSpeed = CalcIntendedNitroMaxSpeed();
+            MaxAccelTime = CalcIntendedNitroMaxAccelTime();
+            MaxBrakeTime = CalcIntendedNitroMaxBrakeTime();
+        }
+        else
+        {
+            Debug.Log("Danger to use nitro. Stop using nitro");
+        }
     }
 
 
@@ -244,8 +253,6 @@ public class CarControl : MonoBehaviour
     // find intendedDesiredTracker with nitro, whether the car can brake in time or not (detail: whether the car's speed can be intendedDesiredSpeed when it go to intendedDesiredTracker)
     bool CheckToUseNitroSavely(DesiredTracker currentDesiredTracker)
     {
-        if (IsUsingNitro() || NumberOfTimesUsingNitro <= 0) return false;
-
         float intendedNitroMaxSpeed = CalcIntendedNitroMaxSpeed();
         float intendedNitroMaxBrakeTime = CalcIntendedNitroMaxBrakeTime();
         float intendedMinDistanceToStopCar = FindMinDistanceToStopCar_IfUseNitroNow(intendedNitroMaxSpeed, intendedNitroMaxBrakeTime);
