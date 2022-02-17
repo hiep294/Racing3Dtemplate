@@ -218,20 +218,11 @@ public class CarControl : MonoBehaviour
         if (PreparingNitroRemaining > 0) return;
         PreparingNitroRemaining = Mathf.Infinity;
 
-        bool savelyToUseNitro = CheckToUseNitroSavely(currentDesiredTracker);
-
-        if (savelyToUseNitro)
-        {
-            NumberOfTimesUsingNitro--;
-            nitroRemainingTime = nitroDuration;
-            MaxSpeed = CalcIntendedNitroMaxSpeed();
-            MaxAccelTime = CalcIntendedNitroMaxAccelTime();
-            MaxBrakeTime = CalcIntendedNitroMaxBrakeTime();
-        }
-        else
-        {
-            Debug.Log("Danger to use nitro. Stop using nitro");
-        }
+        NumberOfTimesUsingNitro--;
+        nitroRemainingTime = nitroDuration;
+        MaxSpeed = CalcIntendedNitroMaxSpeed();
+        MaxAccelTime = CalcIntendedNitroMaxAccelTime();
+        MaxBrakeTime = CalcIntendedNitroMaxBrakeTime();
     }
 
 
@@ -247,71 +238,6 @@ public class CarControl : MonoBehaviour
         float maxSpeedNitro = Mathf.Max(minOfMaxSpeed, GetValueModifier(baseMaxSpeed, maxSpeedAdditiveModifier, maxSpeedPercentageModifier));
         MaxSpeed += (baseMaxSpeed - maxSpeedNitro) * Time.deltaTime / cleaningNitroDuration;
         if (MaxSpeed < baseMaxSpeed) { MaxSpeed = baseMaxSpeed; }
-    }
-
-
-    // find intendedDesiredTracker with nitro, whether the car can brake in time or not (detail: whether the car's speed can be intendedDesiredSpeed when it go to intendedDesiredTracker)
-    bool CheckToUseNitroSavely(DesiredTracker currentDesiredTracker)
-    {
-        float intendedNitroMaxSpeed = CalcIntendedNitroMaxSpeed();
-        float intendedNitroMaxBrakeTime = CalcIntendedNitroMaxBrakeTime();
-        float intendedMinDistanceToStopCar = FindMinDistanceToStopCar_IfUseNitroNow(intendedNitroMaxSpeed, intendedNitroMaxBrakeTime);
-        float rangeAhead = intendedMinDistanceToStopCar - minDistanceToStopCar;
-        if (rangeAhead <= 0) return true; // has been validated in normal case
-
-        // find desiredTrack from at current myTracker.frontPoint's position, rangeAhead = 
-        float frontPointOfMyTracker = distanceTravelled + minDistanceToStopCar;
-        DesiredTracker intendedDesiredTracker = FindDesiredTracker(
-            frontPointOfMyTracker,
-            intendedMinDistanceToStopCar - minDistanceToStopCar);
-        // compare to currentDesiredTracker
-        if (intendedDesiredTracker.approachingCornerAngle <= currentDesiredTracker.approachingCornerAngle) return true; // has been validated in normal case
-
-        float intendedDesiredSpeed = FindDesiredSpeed(intendedDesiredTracker.approachingCornerAngle, Mathf.Max(MaxSpeed, intendedNitroMaxSpeed));
-
-        if (intendedDesiredSpeed >= currentSpeed) return true; // normal case of using nitro
-
-        // now intendedDesiredSpeed < currentSpeed,
-        // check brake, and the car has to brake more than prev
-        float distanceBetween_IntendedDesiredTracker_And_Car = intendedDesiredTracker.distanceTravelled - distanceTravelled;
-
-
-        float a = -intendedNitroMaxSpeed / intendedNitroMaxBrakeTime;
-        // also need to compare with duration
-        float minDistanceFor_CurrentSpeed_downTo_IntendedDesiredSpeed = FindDistanceGoing(a, currentSpeed, intendedDesiredSpeed);
-
-#if UNITY_EDITOR
-        myTracker.checkingPoint.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(distanceTravelled + intendedMinDistanceToStopCar), thePathCreator.path.GetRotationAtDistance(distanceTravelled + intendedMinDistanceToStopCar));
-#endif
-
-        return minDistanceFor_CurrentSpeed_downTo_IntendedDesiredSpeed <= distanceBetween_IntendedDesiredTracker_And_Car;
-    }
-
-    float FindMinDistanceToStopCar_IfUseNitroNow(float intendedNitroMaxSpeed, float intendedNitroMaxBrakeTime)
-    {
-        float rs;
-
-        float a_Normal = -baseMaxSpeed / intendedNitroMaxBrakeTime;
-        float a_Nitro = -intendedNitroMaxSpeed / intendedNitroMaxBrakeTime;
-        float intendedBrakeTime_IfNitroDurationUnlimited = (0 - currentSpeed) / a_Nitro;
-
-        if (nitroDuration >= intendedBrakeTime_IfNitroDurationUnlimited)
-        {
-            rs = FindMinDistanceToStopCar(intendedNitroMaxSpeed, intendedNitroMaxBrakeTime);
-            Debug.Log($"MinDistanceToStopCar (nitroDuration {nitroDuration}>= intendedBrakeTime_IfNitroDurationUnlimited{intendedBrakeTime_IfNitroDurationUnlimited}): {rs}");
-            return rs;
-        }
-
-
-
-        float speedWhenNitroIsOut_WhileTheCarBrake = currentSpeed + a_Nitro * nitroDuration;
-        float distanceGoingWithNitro = FindDistanceGoing(a_Nitro, currentSpeed, speedWhenNitroIsOut_WhileTheCarBrake); // v = v0 + at;
-
-        float distanceToStopCompletely_afterNitroIsOut = FindDistanceGoing(a_Normal, speedWhenNitroIsOut_WhileTheCarBrake, 0);
-
-        rs = distanceGoingWithNitro + distanceToStopCompletely_afterNitroIsOut;
-        Debug.Log($"MinDistanceToStopCar (nitroDuration < intendedNitroMaxBrakeTime): {rs}");
-        return rs;
     }
 
     #endregion
