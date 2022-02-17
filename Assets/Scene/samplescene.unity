@@ -707,7 +707,7 @@ MonoBehaviour:
   maxSpeedPercentageModifier: 100
   maxAccelTimeAdditiveModifier: -1
   maxAccelTimePercentageModifier: -10
-  maxBrakeTimeAdditiveModifier: 100
+  maxBrakeTimeAdditiveModifier: 1
   maxBrakeTimePercentageModifier: -10
   inputNitro: Jump
   nitroDuration: 30

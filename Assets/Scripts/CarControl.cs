@@ -16,14 +16,15 @@ public class CarControl : MonoBehaviour
     [Tooltip("MaxAccelTime could be changed by Nitro")] [SerializeField] float minOfMaxAccelTime = 0.5f;
 
 
-    float maxSpeed;
     DesiredTracker m_DesiredTracker = new DesiredTracker()
     {
         distanceTravelled = 0,
 
     };
-    float currentSpeed = 0;
     float maxAccelTime;  // time from 0 to MaxSpeed, will be consider as max time of accel
+    float maxSpeed;
+    float currentSpeed = 0;
+    float desiredSpeed;
 
 
 
@@ -59,7 +60,6 @@ public class CarControl : MonoBehaviour
     [SerializeField] float stepToCheckCornerAngle = 5f; // farTracker's aHeadDistance will devide it into parts by this step; => to find maxApproachingCornerAngle
     float maxBrakeTime; // time from MaxSpeed to 0, will be consider as max time of brake
     float minDistanceToStopCar;
-    float desiredSpeed;
 
 
 
@@ -301,7 +301,7 @@ public class CarControl : MonoBehaviour
 
         //* calc angle of points (between farTracker and this transform) and this transform
         float suitableDistanceCount = 0; //cache for appropriate approachingCornerAngle
-        float distanceCount = 0;
+        float distanceCount = -stepToCheckCornerAngle;
         while (distanceCount < rangeAhead + stepToCheckCornerAngle)
         {
             if (distanceCount > rangeAhead)
@@ -332,7 +332,7 @@ public class CarControl : MonoBehaviour
         // if it's different to our current angle, we need to be cautious (i.e. slow down) a certain amount
 
 #if UNITY_EDITOR
-        myTracker.checkingPoint.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(startDistanceTravelled), thePathCreator.path.GetRotationAtDistance(startDistanceTravelled));
+        myTracker.checkingPoint.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(startDistanceTravelled - stepToCheckCornerAngle), thePathCreator.path.GetRotationAtDistance(startDistanceTravelled - stepToCheckCornerAngle));
 #endif
 
         return new DesiredTracker()
