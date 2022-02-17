@@ -207,18 +207,25 @@ public class CarControl : MonoBehaviour
 
 
         float a = -intendedNitroMaxSpeed / intendedNitroMaxBrakeTime;
-        float distanceAvailableFor_CurrentSpeed_downTo_IntendedDesiredSpeed = FindDistanceGoing(a, currentSpeed, intendedDesiredSpeed);
+        float minDistanceFor_CurrentSpeed_downTo_IntendedDesiredSpeed = FindDistanceGoing(a, currentSpeed, intendedDesiredSpeed);
 
 #if UNITY_EDITOR
         myTracker.checkingPoint.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(distanceTravelled + intendedMinDistanceToStopCar), thePathCreator.path.GetRotationAtDistance(distanceTravelled + intendedMinDistanceToStopCar));
 #endif
 
-        return distanceAvailableFor_CurrentSpeed_downTo_IntendedDesiredSpeed <= distanceBetween_IntendedDesiredTracker_And_Car;
+        return minDistanceFor_CurrentSpeed_downTo_IntendedDesiredSpeed <= distanceBetween_IntendedDesiredTracker_And_Car;
     }
 
     float FindMinDistanceToStopCar_IfUseNitroNow(float intendedNitroMaxSpeed, float intendedNitroMaxBrakeTime)
     {
-        return FindMinDistanceToStopCar(intendedNitroMaxSpeed, intendedNitroMaxBrakeTime);
+        if (nitroDuration >= intendedNitroMaxBrakeTime)
+            return FindMinDistanceToStopCar(intendedNitroMaxSpeed, intendedNitroMaxBrakeTime);
+
+        float a = -intendedNitroMaxSpeed / intendedNitroMaxBrakeTime;
+        float distanceGoingWithNitro = FindDistanceGoing(a, currentSpeed, currentSpeed + a * nitroDuration); // v = v0 + at;
+
+
+        return 0;
     }
 
     bool IsUsingNitro() { return nitroRemainingTime > 0; }

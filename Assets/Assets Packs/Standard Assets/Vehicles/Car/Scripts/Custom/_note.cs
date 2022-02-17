@@ -6,7 +6,9 @@ public class _note : MonoBehaviour
 {
     /*
      * 
+    
     + check nitro available to use or not
+        FindMinDistanceToStopCar_IfUseNitroNow
 
     + clean coding
         UpdateDesiredSpeed
