@@ -206,16 +206,18 @@ public class CarControl : MonoBehaviour
         // check brake, and the car has to brake more than prev
         float distanceBetween_IntendedDesiredTracker_And_Car = intendedDesiredTracker.distanceTravelled - distanceTravelled;
 
+
         float a = -intendedNitroMaxSpeed / intendedNitroMaxBrakeTime;
-        float t = (intendedDesiredSpeed - currentSpeed) / a;
-        float s = (float)(currentSpeed * t + 0.5 * a * t * t);
+        float distanceAvailableFor_CurrentSpeed_downTo_IntendedDesiredSpeed = FindDistanceGoing(a, currentSpeed, intendedDesiredSpeed);
 
 #if UNITY_EDITOR
         myTracker.checkingPoint.transform.SetPositionAndRotation(thePathCreator.path.GetPointAtDistance(distanceTravelled + intendedMinDistanceToStopCar), thePathCreator.path.GetRotationAtDistance(distanceTravelled + intendedMinDistanceToStopCar));
 #endif
 
-        return s <= distanceBetween_IntendedDesiredTracker_And_Car;
+        return distanceAvailableFor_CurrentSpeed_downTo_IntendedDesiredSpeed <= distanceBetween_IntendedDesiredTracker_And_Car;
     }
+
+
 
     bool IsUsingNitro() { return nitroRemainingTime > 0; }
     bool IsCompletedCleaningNitro() { return MaxSpeed == baseMaxSpeed; }
@@ -291,9 +293,14 @@ public class CarControl : MonoBehaviour
     {
         //* update aHeadDistance of FarTracker, it will be = distance For Car To Stop completely
         float a = (0f - paramMaxSpeed) / paramMaxBrakeTime;
-        float t = (0f - currentSpeed) / a;
-        float distanceForCarToStop = currentSpeed * t + 0.5f * a * t * t + currentSpeed * Time.deltaTime; // + currentSpeed * Time.deltaTime to avoid something small,
+        float distanceForCarToStop = FindDistanceGoing(a, currentSpeed, 0); // + currentSpeed * Time.deltaTime to avoid something small,
         return Mathf.Max(minLookAhead, distanceForCarToStop);
+    }
+
+    float FindDistanceGoing(float accelOrBrake, float currentSpeed, float lastSpeed)
+    {
+        float t = (lastSpeed - currentSpeed) / accelOrBrake;
+        return (float)(currentSpeed * t + 0.5 * accelOrBrake * t * t);
     }
 
     void UpdateTrackerFrontPointMovement()
