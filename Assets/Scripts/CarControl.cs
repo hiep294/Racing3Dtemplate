@@ -146,7 +146,6 @@ public class CarControl : MonoBehaviour
             StopImmediatelyNitro(m_DesiredTracker); // this will make the maxBrakeTime change to savely handle at corner
         }
 
-        UpdateMovement(desiredSpeed); // desiredSpeed with prev Time.deltaTime
 
         minDistanceToStopCar = FindMinDistanceToStopCar(MaxSpeed, MaxBrakeTime);
         // float minDistanceToStopCarNitro = FindMinDistanceToStopCar(CalcIntendedNitroMaxSpeed(), CalcIntendedNitroMaxBrakeTime());
@@ -160,6 +159,9 @@ public class CarControl : MonoBehaviour
         desiredSpeed = FindDesiredSpeed(m_DesiredTracker.approachingCornerAngle, MaxSpeed);
 
         UpdateNitroManament(m_DesiredTracker);
+
+        UpdateMovement(desiredSpeed); // desiredSpeed with prev Time.deltaTime
+
     }
 
 
