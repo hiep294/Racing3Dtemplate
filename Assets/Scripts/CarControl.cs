@@ -207,6 +207,7 @@ public class CarControl : MonoBehaviour
 
 
         float a = -intendedNitroMaxSpeed / intendedNitroMaxBrakeTime;
+        // also need to compare with duration
         float minDistanceFor_CurrentSpeed_downTo_IntendedDesiredSpeed = FindDistanceGoing(a, currentSpeed, intendedDesiredSpeed);
 
 #if UNITY_EDITOR
@@ -218,14 +219,29 @@ public class CarControl : MonoBehaviour
 
     float FindMinDistanceToStopCar_IfUseNitroNow(float intendedNitroMaxSpeed, float intendedNitroMaxBrakeTime)
     {
-        if (nitroDuration >= intendedNitroMaxBrakeTime)
-            return FindMinDistanceToStopCar(intendedNitroMaxSpeed, intendedNitroMaxBrakeTime);
+        float rs;
 
-        float a = -intendedNitroMaxSpeed / intendedNitroMaxBrakeTime;
-        float distanceGoingWithNitro = FindDistanceGoing(a, currentSpeed, currentSpeed + a * nitroDuration); // v = v0 + at;
+        float a_Normal = -baseMaxSpeed / intendedNitroMaxBrakeTime;
+        float a_Nitro = -intendedNitroMaxSpeed / intendedNitroMaxBrakeTime;
+        float intendedBrakeTime_IfNitroDurationUnlimited = (0 - currentSpeed) / a_Nitro;
+
+        if (nitroDuration >= intendedBrakeTime_IfNitroDurationUnlimited)
+        {
+            rs = FindMinDistanceToStopCar(intendedNitroMaxSpeed, intendedNitroMaxBrakeTime);
+            Debug.Log($"MinDistanceToStopCar (nitroDuration {nitroDuration}>= intendedBrakeTime_IfNitroDurationUnlimited{intendedBrakeTime_IfNitroDurationUnlimited}): {rs}");
+            return rs;
+        }
 
 
-        return 0;
+
+        float speedWhenNitroIsOut_WhileTheCarBrake = currentSpeed + a_Nitro * nitroDuration;
+        float distanceGoingWithNitro = FindDistanceGoing(a_Nitro, currentSpeed, speedWhenNitroIsOut_WhileTheCarBrake); // v = v0 + at;
+
+        float distanceToStopCompletely_afterNitroIsOut = FindDistanceGoing(a_Normal, speedWhenNitroIsOut_WhileTheCarBrake, 0);
+
+        rs = distanceGoingWithNitro + distanceToStopCompletely_afterNitroIsOut;
+        Debug.Log($"MinDistanceToStopCar (nitroDuration < intendedNitroMaxBrakeTime): {rs}");
+        return rs;
     }
 
     bool IsUsingNitro() { return nitroRemainingTime > 0; }

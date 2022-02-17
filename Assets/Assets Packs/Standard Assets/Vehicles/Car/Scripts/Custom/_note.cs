@@ -6,7 +6,11 @@ public class _note : MonoBehaviour
 {
     /*
      * 
-    
+    float distanceStep = Mathf.Floor(currentSpeed * Time.deltaTime * 10) / 10;
+        int count = numberOfStepToCheckCornerAngle;
+    => will be ok and performance for normal case, but can not use for nitro case
+
+    + fix crash
     + check nitro available to use or not
         FindMinDistanceToStopCar_IfUseNitroNow
 
