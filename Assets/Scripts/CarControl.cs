@@ -83,6 +83,7 @@ public class CarControl : MonoBehaviour
     [SerializeField] float maxApproachingCornerAngle = 30;
     float nitroRemainingTime = -Mathf.Infinity;
     float preparingNitroRemaining = Mathf.Infinity;
+    bool isStoppingNitro = false;
 
     public float MaxSpeed { get => maxSpeed; set => maxSpeed = value; }
     public float MaxAccelTime { get => maxAccelTime; set => maxAccelTime = value; }
@@ -141,14 +142,17 @@ public class CarControl : MonoBehaviour
 
     void Update()
     {
-        if (m_DesiredTracker.approachingCornerAngle > maxApproachingCornerAngle && IsUsingNitro())
+        UpdateMovement(desiredSpeed); // desiredSpeed with prev Time.deltaTime
+
+        ManageNitroCommonly();
+
+        // stop nitro STEP 1 - prepare: make changing base elements: maxSpeed, maxBrakeTime which can affect to m_DesiredTracker
+        if (ShouldStopNitroSuddenly())
         {
-            StopImmediatelyNitro(m_DesiredTracker); // this will make the maxBrakeTime change to savely handle at corner
+            PrepareToStopNitro();
         }
 
-
         minDistanceToStopCar = FindMinDistanceToStopCar(MaxSpeed, MaxBrakeTime);
-        // float minDistanceToStopCarNitro = FindMinDistanceToStopCar(CalcIntendedNitroMaxSpeed(), CalcIntendedNitroMaxBrakeTime());
 
 #if UNITY_EDITOR
         UpdateTrackerFrontPointMovement();
@@ -158,11 +162,13 @@ public class CarControl : MonoBehaviour
         // update desiredSpeed;
         desiredSpeed = FindDesiredSpeed(m_DesiredTracker.approachingCornerAngle, MaxSpeed);
 
-        UpdateNitroManament(m_DesiredTracker);
-
-        UpdateMovement(desiredSpeed); // desiredSpeed with prev Time.deltaTime
-
+        // stop nitro STEP 2 - handle stop with refreshed m_DesiredTracker
+        if (isStoppingNitro)
+        {
+            StoppingNitro(m_DesiredTracker); // this will make the maxBrakeTime change to savely handle at corner
+        }
     }
+
 
 
 
@@ -174,7 +180,11 @@ public class CarControl : MonoBehaviour
     bool IsCleaningNitro() { return !IsUsingNitro() && !IsCompletedCleaningNitro(); }
     public bool ShouldPrepareNitro()
     {
-        return !IsUsingNitro() && IsCompletedCleaningNitro() && NumberOfTimesUsingNitro > 0 && PreparingNitroRemaining == Mathf.Infinity;
+        return !IsUsingNitro() && IsCompletedCleaningNitro() && NumberOfTimesUsingNitro > 0 && !ShouldStopNitroSuddenly() && !isStoppingNitro;
+    }
+    public bool ShouldStopNitroSuddenly()
+    {
+        return m_DesiredTracker.approachingCornerAngle > maxApproachingCornerAngle;
     }
 
     // if use nitro now, IntendedNitroMaxSpeed will be calc
@@ -193,9 +203,10 @@ public class CarControl : MonoBehaviour
         return Mathf.Max(minOfMaxBrakeTime, GetValueModifier(baseMaxBrakeTime, maxBrakeTimeAdditiveModifier, maxBrakeTimePercentageModifier));
     }
 
-    void UpdateNitroManament(DesiredTracker currentDesiredTracker)
+    void ManageNitroCommonly()
     {
         nitroRemainingTime -= Time.deltaTime;
+
         bool isUsingNitro = IsUsingNitro();
         if (!isUsingNitro)
         {
@@ -207,37 +218,63 @@ public class CarControl : MonoBehaviour
             CleanNitro();
         }
 
+        // use Nitro
         if (CrossPlatformInputManager.GetButtonUp(inputNitro))
         {
             PrepareToUseNitro();
         }
-        UseNitro(currentDesiredTracker); // this will change MaxBrakeTime
+        UseNitro(); // this will change MaxBrakeTime
     }
 
-    private void StopImmediatelyNitro(DesiredTracker currentDesiredTracker)
+    /**
+    * Stop nitro Immediately
+    */
+
+    // this method must be put before desiredSpeed will be refreshed in this frame, because it will make changes elements which affect to desiredSpeed, like: maxBrakeTime, maxSpeed
+    void PrepareToStopNitro()
     {
-        TurnOffNitro(); // this will change MaxBrakeTime
-        CleanNitroCompletely();
-        // setup brakeTime corresponding to maxBrakeTime_of Nitro
-        // currentSpeed also need to change immediately
-        float v = FindDesiredSpeed(currentDesiredTracker.approachingCornerAngle, MaxSpeed);
-        float s = currentDesiredTracker.distanceTravelled - distanceTravelled;
-        float a = (0 - baseMaxSpeed) / baseMaxBrakeTime;
-        // v*v -vo * vo = 2as // https://vietjack.com/vat-ly-lop-10/xac-dinh-van-toc-gia-toc-quang-duong-trong-chuyen-dong-thang-bien-doi-deu.jsp
-        float vo = Mathf.Sqrt(v * v - 2 * a * s);
-        currentSpeed = vo;
-        Debug.Log($"currentSpeed {currentSpeed} ; v {v}");
+        if (IsUsingNitro() && isStoppingNitro == false)
+        {
+            TurnOffNitro(); // this will change MaxBrakeTime
+            CleanNitroCompletely();
+            isStoppingNitro = true;
+            // stop Nitro Immediately can cause many consequences
+        }
     }
 
+    void StoppingNitro(DesiredTracker desiredTracker_IntheEndOfThisFrame)
+    {
+        // complete stop nitro at corner: when the car in accelaration
+        if (currentSpeed < desiredSpeed)
+        {
+            isStoppingNitro = false;
+            // now the car will automatically handle its speed as common case
+            return;
+        }
+        // stop nitro immediately
+        // currentSpeed also need to change immediately
+        float distanceGofarInThisFrame = Time.deltaTime * currentSpeed;
+        float v = desiredSpeed;
+        float s = Mathf.Max(desiredTracker_IntheEndOfThisFrame.distanceTravelled - distanceTravelled - distanceGofarInThisFrame, 0);
+        float a = (0 - baseMaxSpeed) / baseMaxBrakeTime;
+        // v*v -vo * vo = 2as
+        float vo = Mathf.Sqrt(v * v - 2 * a * s); // vo: current speed in the next frame
+        currentSpeed = vo;
+    }
+
+
+    /**
+    * Use nitro
+    */
     public void PrepareToUseNitro()
     {
         if (ShouldPrepareNitro())
         {
-            Debug.Log("PreparingNitroRemaining");
+            // Debug.Log("PreparingNitroRemaining");
             PreparingNitroRemaining = 0;
         }
     }
-    void UseNitro(DesiredTracker currentDesiredTracker)
+    void UseNitro()
     {
         PreparingNitroRemaining -= Time.deltaTime * 2;
 
@@ -252,7 +289,9 @@ public class CarControl : MonoBehaviour
     }
 
 
-
+    /**
+    *   Turn off nitro
+    */
     void TurnOffNitro()
     {
         nitroRemainingTime = -Mathf.Infinity;
