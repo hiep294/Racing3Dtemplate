@@ -142,7 +142,7 @@ public class CarControl : MonoBehaviour
 
     void Update()
     {
-        UpdateMovement(desiredSpeed); // desiredSpeed with prev Time.deltaTime
+        UpdateMovement(desiredSpeed); // desiredSpeed with prev frame
 
         ManageNitroCommonly();
 
@@ -369,7 +369,7 @@ public class CarControl : MonoBehaviour
         float approachingCornerAngle = 0;
 
         //* calc angle of points (between farTracker and this transform) and this transform
-        float suitableDistanceCount = 0; //cache for appropriate approachingCornerAngle
+        float suitableDistanceAhead = 0; // cache for appropriate approachingCornerAngle
         float distanceCount = -stepToCheckCornerAngle;
         while (distanceCount < rangeAhead + stepToCheckCornerAngle)
         {
@@ -385,7 +385,7 @@ public class CarControl : MonoBehaviour
             if (approachingCornerAngle < angleCornerTest)
             {
                 approachingCornerAngle = angleCornerTest;
-                suitableDistanceCount = distanceCount;
+                suitableDistanceAhead = distanceCount;
             };
 
             distanceCount += stepToCheckCornerAngle;
@@ -406,7 +406,7 @@ public class CarControl : MonoBehaviour
 
         return new DesiredTracker()
         {
-            distanceTravelled = suitableDistanceCount + startDistanceTravelled,
+            distanceTravelled = suitableDistanceAhead + startDistanceTravelled,
             approachingCornerAngle = approachingCornerAngle
         };
     }
